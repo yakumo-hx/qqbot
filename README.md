@@ -122,6 +122,18 @@ $env:PYTHONIOENCODING="utf-8"
 
 > `$env:PYTHONIOENCODING="utf-8"` 不是可选项——Windows 中文环境下不加它，Python 输出中文会崩。
 
+### 单人私聊陪伴版 0.0.1（独立端口 8081）
+
+在同一个仓库里还有一个**独立**的私聊版本，专门用于「像人一样和一个人聊天」：长期记忆、自我状态、每天 3~5 条主动消息、拟人化分段/延迟。它和群聊机器人互不 import、互不影响：
+
+```powershell
+cd E:\QQbot
+$env:PYTHONIOENCODING="utf-8"
+.\venv\Scripts\python private_bot.py
+```
+
+NapCat 里已追加第二个 WebSocket 客户端 `ws://127.0.0.1:8081`（改完需重启 NapCat）。详细配置、记忆文件、主动消息规则见 [`docs/PRIVATE_CHAT.md`](docs/PRIVATE_CHAT.md)。
+
 ### 验证改动（本项目没有 pytest）
 
 ```powershell
@@ -147,10 +159,10 @@ $env:PYTHONIOENCODING="utf-8"; .\venv\Scripts\python -c "import reverse_bot; pri
 
 | 路径 | 职责 |
 |---|---|
-| `reverse_bot.py` | 入口：WS 服务端 + 消息路由（去重/白名单/语音转写/别名匹配） |
+| `reverse_bot.py` | 入口：WS 服务端 + 消息路由（去重/白名单/别名匹配） |
 | `scripts/decision_engine.py` | 决策引擎：上下文缓冲、密度阈值、话题切换检测、主备熔断 |
 | `scripts/llm_pool.py` | **中央模型池**：优先级链、冷却、预算、审计 JSONL |
-| `scripts/commands/` | 指令包（注册表模式，14 个模块） |
+| `scripts/commands/` | 指令包（注册表模式，13 个模块） |
 | `scripts/model_primary.py` / `model_fallback.py` | 模型子进程（stdin/stdout JSON 通信） |
 | `scripts/zero_shot_classifier.py` | 零样本分类器（懒加载，避免启动时载入 torch） |
 | `scripts/user_profile.py` | 用户画像（缓冲 + 定时批量更新） |
