@@ -22,5 +22,5 @@ from . import divination  # noqa: F401
 from . import piano  # noqa: F401
 from . import character  # noqa: F401
 from . import system  # noqa: F401
-from . import voice  # noqa: F401
 from . import help  # noqa: F401
+from . import interaction  # noqa: F401          # ← 新增（PR#1）

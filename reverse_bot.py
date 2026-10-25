@@ -23,6 +23,9 @@ from datetime import datetime
 from typing import Dict
 
 import websockets
+from scripts.interaction_menu import InteractionMenus
+from scripts.offline_watchdog import get_watchdog
+from scripts import reference as reference_mod
 
 # ========== 并发安全锁 ==========
 _plus_one_locks: dict = {}
@@ -49,7 +52,7 @@ from scripts.user_profile import (
 
 # ========== 命令处理器 ==========
 from scripts.command_handler import (
-    handle_command, process_voice_message,
+    handle_command,
     _mystery_queue, _dedup_lock,
     BOT_QQ, VERSION,
     init_handlers,
@@ -63,7 +66,20 @@ import threading
 _features_cache: dict = {"data": None, "mtime": 0.0}
 _features_lock = threading.Lock()
 _FEATURES_FILE = os.path.join(SCRIPT_DIR, "config", "group_features.json")
-_FEATURE_KEYS = ("decision_engine", "plus_one", "commands", "newcomer_welcome", "profile_record", "vision", "search")
+_FEATURE_KEYS = ("decision_engine", "plus_one", "commands", "newcomer_welcome", "profile_record", "vision", "search", "sticker")
+
+
+def _sticker_send_sub_type() -> int:
+    """表情包的发送形态：1 = QQ 贴图，0 = 普通图片（config/stickers.json）。
+
+    读不到 / 字段非法一律给 0 —— 保守退回普通图片：观感最差，但绝不会出错。
+    """
+    try:
+        with open(os.path.join(SCRIPT_DIR, "config", "stickers.json"), "r", encoding="utf-8") as f:
+            value = json.load(f).get("send_sub_type", 0)
+        return 1 if int(value) == 1 else 0
+    except Exception:
+        return 0
 
 
 def _get_group_features(gid: str) -> dict:
@@ -168,6 +184,11 @@ repeated_messages: Dict[str, str] = {}
 
 # 运行时状态
 current_websocket = None
+interaction_menus = InteractionMenus(_get_group_features, handle_command, bot_logger)
+
+# ========== 掉线看门狗（L2 置顶弹窗告警 / L1 可选自动重启，默认关闭） ==========
+# 配置：config/auto_restart.json（mtime 热加载）；日志前缀 [自愈]
+_watchdog = get_watchdog(bot_logger)
 
 
 # ========== 消息发送 ==========
@@ -187,16 +208,25 @@ async def send_message(websocket, group_id: int, message: str, at_user: str = No
         return False
 
 
-async def send_group_image(websocket, group_id: int, image_path: str):
-    """发送图片消息（base64 内联）"""
+async def send_group_image(websocket, group_id: int, image_path: str, sub_type: int = 0):
+    """发送图片消息（base64 内联）。
+
+    sub_type=1 时按 QQ「贴图」形态发送。**默认 0，既有调用点的报文与接线前
+    逐字节一致**（sub_type 只在等于 1 时才写进 data）。
+    贴图形态的源码取证与实机验证步骤见
+    qq_native_re/findings/sticker/PROBE_subtype_runbook.md。
+    """
     import base64
     with open(image_path, "rb") as f:
         b64 = base64.b64encode(f.read()).decode("ascii")
+    data = {"file": f"base64://{b64}"}
+    if int(sub_type or 0) == 1:
+        data["sub_type"] = 1
     payload = {
         "action": "send_group_msg",
         "params": {
             "group_id": group_id,
-            "message": [{"type": "image", "data": {"file": f"base64://{b64}"}}]
+            "message": [{"type": "image", "data": data}]
         }
     }
     await websocket.send(json.dumps(payload))
@@ -334,13 +364,11 @@ async def handle_message(websocket, data: dict):
     if not any(_feature_on(gid_str, k) for k in _FEATURE_KEYS):
         return
 
-    # ===== 语音消息转文字 =====
-    if "[CQ:record" in raw_message:
-        raw_message = await process_voice_message(raw_message)
-
     # 清理 CQ 码，检查 @
     clean_message = re.sub(r'\[CQ:\w+,[^\]]*\]', '', raw_message).strip()
-    bot_mentioned = f"[CQ:at,qq={BOT_QQ}]" in raw_message
+    # OneBot 实现的 at 段可能附带 name 等参数，不能只匹配裸 CQ 码。
+    bot_mentioned = bool(re.search(
+        rf"\[CQ:at,qq={re.escape(str(BOT_QQ))}(?:,[^\]]*)?\]", raw_message))
 
     # ===== 图片解析 + 本地消息缓存（解引用用） =====
     # 只要有图就无条件入缓存：手机端「先发图 → 再引用提问」时，提问那条消息里没有图,
@@ -349,6 +377,31 @@ async def handle_message(websocket, data: dict):
     from scripts import image_cache, image_utils, vision  # noqa: F401  (vision 供 _describe_triggered_image 使用)
     uid_str = str(user_id)
     nickname = data.get("sender", {}).get("nickname", "")
+
+    # ===== 指代注解（谁说的 / 说给谁 / 在回应什么）=====
+    # 位置刻意放在「纯图片消息直接 return」**之前**：解引用要靠**别人**发的消息
+    # （被引用的那条往往不是 @bot 的），漏掉没被回应的消息会让引用解不出来。
+    # 任何失败都静默降级：ref_record=None 时下游行为与改动前完全一致。
+    ref_record = None
+    try:
+        if reference_mod.is_enabled_for(gid_str):
+            ref_record = reference_mod.annotate(data)
+            if ref_record:
+                reference_mod.message_index.remember(gid_str, ref_record)
+                reference_mod.roster_mod.observe(
+                    gid_str, ref_record.get("uid"), ref_record.get("card"),
+                    ref_record.get("nickname"), ref_record.get("role"),
+                    ref_record.get("ts"),
+                )
+                if reference_mod.debug_on():
+                    # 试运行期观察：这里打的这一行，就是模型将看到的那一行
+                    _ref_line = reference_mod.render_for(gid_str, ref_record)
+                    if _ref_line:
+                        bot_logger.info(f"[指代] {_ref_line}")
+    except Exception as _e:
+        ref_record = None
+        bot_logger.info(f"[指代] 注解失败（已忽略，不影响回复）: {_e}")
+
     message_images = image_utils.parse_cq_images(raw_message)
     if message_images:
         image_cache.remember(
@@ -429,7 +482,7 @@ async def handle_message(websocket, data: dict):
     if _feature_on(gid_str, "decision_engine"):
         t_decision = time.time()
         try:
-            decision_engine.add_message(gid_str, uid_str, nickname, text_for_bot)
+            decision_engine.add_message(gid_str, uid_str, nickname, text_for_bot, ref=ref_record)
 
             if PROFILE_ENABLED:
                 profile_text = get_profile(gid_str, uid_str)
@@ -437,7 +490,7 @@ async def handle_message(websocket, data: dict):
                     decision_engine.add_message(gid_str, "system", "系统",
                         f"[用户画像: {profile_text}]")
 
-            should_reply, reply_text = await decision_engine.should_reply(
+            should_reply, reply = await decision_engine.should_reply(
                 message=text_for_bot,
                 user_id=uid_str,
                 group_id=gid_str,
@@ -446,18 +499,35 @@ async def handle_message(websocket, data: dict):
                 # 联网搜索：仅在本群开启 search 功能位**且**本轮是 @bot/别名命中时才有资格搜
                 # （自主接话不搜；真正是否搜由 search_gate 三层判定 + 限流决定）
                 search_on=_feature_on(gid_str, "search") and bot_mentioned,
+                # 表情包：仅在本群开启 sticker 功能位时才让它参与判断。
+                # 功能位默认 false（白名单语义），所以接线本身不会让任何群上线。
+                sticker_on=_feature_on(gid_str, "sticker"),
             )
 
             elapsed_ms = int((time.time() - t_decision) * 1000)
             if elapsed_ms > 500:
                 bot_logger.info(f"[耗时] 决策引擎耗时 {elapsed_ms}ms (群{gid_str})")
 
-            if should_reply and reply_text:
+            if should_reply and reply:
                 at_user = uid_str if bot_mentioned else None
-                await send_message(websocket, group_id, reply_text, at_user=at_user)
+                # 纯图回复不带 at —— 表情包本来就是「不说话」的替代
+                if reply.text:
+                    await send_message(websocket, group_id, reply.text, at_user=at_user)
+                if reply.sticker:
+                    sub_type = _sticker_send_sub_type()
+                    try:
+                        await send_group_image(websocket, group_id, reply.sticker,
+                                               sub_type=sub_type)
+                        bot_logger.info(f"[表情] 群 {gid_str} 发出 {os.path.basename(reply.sticker)}"
+                                        f"（sub_type={sub_type}，1=贴图/0=普通图片）")
+                    except Exception as e:
+                        # 发图失败绝不能影响已经发出去的文字
+                        bot_logger.info(f"[表情] 发送失败（已忽略，不影响文字）: {e}")
                 total_ms = int((time.time() - t_req) * 1000)
+                form = ("文字+图" if (reply.text and reply.sticker)
+                        else ("只发图" if reply.sticker else "只发文字"))
                 info = decision_engine.get_debug_info()
-                bot_logger.info(f"[决策] 群 {gid_str} 回复（总耗时 {total_ms}ms）| "
+                bot_logger.info(f"[决策] 群 {gid_str} 回复[{form}]（总耗时 {total_ms}ms）| "
                       f"密度={info.get('密度','?')} 分类={info.get('分类结果','?')} "
                       f"阈值={info.get('阈值','?')} 决策={info.get('最终','?')}")
         except Exception as e:
@@ -571,6 +641,7 @@ async def handler(websocket, *args):
     global current_websocket
     current_websocket = websocket
     set_napcat_connected(True)
+    _watchdog.on_connected()          # [自愈] L2/L3：断开计时结算复位（幂等，重复连接静默）
 
     divider = "╔" + "══════════════════════════════════════" + "╗"
     divider_mid = "║"
@@ -589,6 +660,10 @@ async def handler(websocket, *args):
         async for message in websocket:
             try:
                 data = json.loads(message)
+                if not isinstance(data, dict):          # M3
+                    continue
+                if interaction_menus.rpc.resolve(websocket, data):   # 回执拦截，必须早于 post_type 路由
+                    continue
                 post_type = data.get("post_type")
                 if post_type == "message":
                     if data.get("message_type") == "group":
@@ -596,6 +671,8 @@ async def handler(websocket, *args):
                 elif post_type == "notice":
                     if data.get("notice_type") == "group_increase":
                         asyncio.create_task(_safe_handle_group_increase(websocket, data))
+                    else:                                # M1：必须挂在 else 上
+                        interaction_menus.handle_notice(websocket, data)
             except json.JSONDecodeError:
                 bot_logger.info(f"无效 JSON: {message[:100]}")
             except Exception as e:
@@ -614,20 +691,38 @@ async def handler(websocket, *args):
             bot_logger.info(divider_end)
         bot_logger.info("")
     finally:
-        current_websocket = None
-        set_napcat_connected(False)
+        interaction_menus.disconnect(websocket)          # M2：每个连接都要清自己的状态
+        if current_websocket is websocket:               # M2：只有"当前连接"才允许清全局
+            current_websocket = None
+            set_napcat_connected(False)
+            _watchdog.on_disconnected()                  # [自愈] 开一轮停机计时（90s 后弹窗告警）
 
 
 async def main():
+    # 初始化指代注解层（消息索引 + 群成员名册），见 findings/reference/DESIGN.md
+    try:
+        _ref_cfg = reference_mod.configure()
+        bot_logger.info(f"[指代] 注解层已启用={_ref_cfg.get('enabled')} "
+                        f"索引窗口={_ref_cfg.get('index_max_per_group')}条/群")
+    except Exception as _e:
+        bot_logger.info(f"[指代] 初始化失败，功能降级为不注解: {_e}")
+
     # 初始化命令处理器外部引用
-    init_handlers(bot_logger, decision_engine, send_message, send_group_image, send_group_file)
+    init_handlers(bot_logger, decision_engine, send_message, send_group_image, send_group_file,
+                  menus=interaction_menus)
 
     if PROFILE_ENABLED:
         load_profiles()
 
     profile_task = asyncio.create_task(profile_update_task())
     mystery_task = asyncio.create_task(mystery_number_task())
-    background_tasks = [profile_task, mystery_task]
+
+    # [自愈] 掉线看门狗：**单个** task 驱动；在线时空闲阻塞在 Event 上（零轮询唤醒），
+    # 只在"断连计时/告警截止/重启截止"这些明确时刻才醒来一次。
+    _watchdog.on_start()
+    watchdog_task = _watchdog.start_task(asyncio.get_running_loop())
+
+    background_tasks = [profile_task, mystery_task, watchdog_task]
 
     async def custom_process_request(path, request_headers):
         return None
@@ -653,6 +748,11 @@ async def main():
         for task in background_tasks:
             task.cancel()
         await asyncio.gather(*background_tasks, return_exceptions=True)
+        try:
+            if reference_mod.roster_mod.flush(force=True):
+                bot_logger.info("[指代] 名册已在退出前落盘")
+        except Exception:
+            pass
         bot_logger.info("服务已停止。")
 
 

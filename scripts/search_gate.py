@@ -309,7 +309,8 @@ def _result(search: bool, query: str, tier: str, reason: str,
     return {"search": bool(search), "query": str(query or ""), "tier": tier,
             "reason": reason, "time_range": time_range}
 
-async def _decide_impl(text: str, gid: str, feature_on: bool) -> dict:
+async def _decide_impl(text: str, gid: str, feature_on: bool,
+                       allow_t2: bool = True) -> dict:
     cfg = load_config()
     body = _body_of(text)
     tr = _time_range_of(body)
@@ -334,7 +335,7 @@ async def _decide_impl(text: str, gid: str, feature_on: bool) -> dict:
             hit, word = _t1_hit(body)
             if hit:
                 tier, query, reason = "T1", body, "实时词规则命中（%s）" % word
-        if tier == "none" and not reason and tiers.get("t2", True) and len(body) >= T2_MIN_CHARS:
+        if tier == "none" and not reason and tiers.get("t2", True) and allow_t2 and len(body) >= T2_MIN_CHARS:
             limit = _int_cfg(cfg, "rate_limit_per_hour", 10, 0, 100000)
             used = _rate_counts(gid)
             if limit <= 0 or used >= limit:
@@ -362,10 +363,11 @@ async def _decide_impl(text: str, gid: str, feature_on: bool) -> dict:
              res["time_range"] or "-", res["reason"]), flush=True)
     return res
 
-async def decide(text: str, gid: str, *, feature_on: bool = True) -> dict:
+async def decide(text: str, gid: str, *, feature_on: bool = True,
+                 allow_t2: bool = True) -> dict:
     """三层判定；决策本身**不抛异常**（意外异常 → 保守地不搜）。"""
     try:
-        return await _decide_impl(text, gid, feature_on)
+        return await _decide_impl(text, gid, feature_on, allow_t2=allow_t2)
     except Exception as exc:
         try:
             tr = _time_range_of(_body_of(text))

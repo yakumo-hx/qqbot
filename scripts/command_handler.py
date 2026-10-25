@@ -25,7 +25,6 @@ if VS_ENABLED:
 # ========== commands 包（导入即注册所有指令） ==========
 from scripts.commands import _state, _registry
 from scripts.commands import *  # noqa: F401,F403  触发各子模块 @register
-from scripts.commands.voice import process_voice_message
 
 # ========== 公共 API re-export（reverse_bot.py 依赖，勿删） ==========
 from scripts.commands._state import (

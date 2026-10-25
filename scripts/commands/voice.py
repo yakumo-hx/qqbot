@@ -1,59 +1,26 @@
 # -*- coding: utf-8 -*-
-"""语音消息转文字 — 调用 NapCat HTTP API。"""
+r"""【已停用 2026-10-15】语音转写模块 —— 本文件是墓碑，不导出任何符号。
 
-import re
-import urllib.parse
-from typing import Optional
+原实现：把 [CQ:record] 语音消息 POST 到 http://127.0.0.1:6099/fetch_ptt_text 转成文字。
 
-import httpx
+**实测该端点从未可用**：NapCat 的 onebot11 配置里 httpServers: []（没有 HTTP 动作服务），
+6099 是 WebUI，上面所有 OneBot 动作一律 404，于是 resp.json() 抛
+"Expecting value: line 1 column 1 (char 0)" —— 语音消息从来没有成功转写过。
 
-from . import _state
+用户于 2026-10-15 决定去掉该功能。以下位置已全部摘除：
+  - scripts/commands/__init__.py 的 "from . import voice"
+  - scripts/command_handler.py 的 process_voice_message 再导出
+  - reverse_bot.py 的 [CQ:record 调用块与导入
+  - scripts/commands/_state.py 的 NAPCAT_HTTP_URL / VOICE_TRANSCRIBE_TIMEOUT
 
+**本文件不应被任何模块导入。** 之所以还留在磁盘上，是因为 scripts/ 目录属于
+Medium 完整性级别，而沙箱里的 pwsh 子进程是 Low 完整性 —— 删除会被 Windows 拒绝
+（UnauthorizedAccessException: Access to the path ... is denied）。
+要彻底清掉，在**普通控制台**执行：Remove-Item 该文件 -Force
+（完整路径见同目录 README 或决策日志 015）。
 
-_RECORD_CQ_RE = re.compile(r'\[CQ:record,file=([^\]]*)\]')
+若将来要恢复语音转写，正确做法是**走反向 WebSocket**
+（参考 scripts/interaction_menu.py 的 OneBotRPC），而不是 6099。
 
-
-async def _transcribe_voice(file_param: str) -> Optional[str]:
-    """调用 NapCat HTTP API 将语音转写为文字。成功返回文本，失败返回 None。"""
-    try:
-        file_id = urllib.parse.unquote(file_param)
-        async with httpx.AsyncClient(timeout=_state.VOICE_TRANSCRIBE_TIMEOUT) as client:
-            resp = await client.post(
-                f"{_state.NAPCAT_HTTP_URL}/fetch_ptt_text",
-                json={"file_id": file_id},
-                headers={"Content-Type": "application/json"},
-            )
-            result = resp.json()
-            text = result.get("data", {}).get("text", "")
-            return text.strip() if text else None
-    except httpx.TimeoutException:
-        if _state.bot_logger:
-            _state.bot_logger.info(f"[语音转写] API 超时: file={file_param[:40]}")
-    except Exception as e:
-        if _state.bot_logger:
-            _state.bot_logger.info(f"[语音转写] API 调用失败: {e} (file={file_param[:40]})")
-    return None
-
-
-async def process_voice_message(raw_message: str) -> str:
-    """将消息中的 [CQ:record,file=...] 替换为转写文字。"""
-    matches = list(_RECORD_CQ_RE.finditer(raw_message))
-    if not matches:
-        return raw_message
-
-    text = raw_message
-    for m in reversed(matches):
-        file_param = m.group(1)
-        if _state.bot_logger:
-            _state.bot_logger.info(f"[语音转写] 收到语音消息，file={file_param[:60]}")
-
-        result = await _transcribe_voice(file_param)
-        if result:
-            if _state.bot_logger:
-                _state.bot_logger.info(f"[语音转写] 转写成功: {result[:60]}")
-            text = text[:m.start()] + result + text[m.end():]
-        else:
-            if _state.bot_logger:
-                _state.bot_logger.info(f"[语音转写] 转写失败，保留原 CQ 码")
-
-    return text
+备份留档：qq_native_re/patches/voice_removal_backup_20261015-092516/
+"""

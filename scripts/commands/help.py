@@ -51,13 +51,13 @@ HELP_CATEGORIES = {
         "commands": [
             ("切换模型 模型名 / 切模型 模型名", "切换决策引擎主模型（所有人可用）"),
             ("查看模型 / 模型列表", "列出可用模型及当前主模型"),
-            ("test", "测试主模型和备用模型的 API 连通性"),
+            ("test", "测试模型池连通性，并打印优先级链、冷却状态与审计日志路径"),
         ],
     },
     "日常": {
         "title": "日常功能",
         "commands": [
-            ("签到", "每日签到，获取神秘数字"),
+            ("签到", "每日签到，统计累计天数、连续天数与全群排名"),
             ("神秘数字", "随机召唤一个神秘数字"),
         ],
     },
@@ -69,7 +69,6 @@ HELP_SHORT = {
     "角色": "角色与记忆管理",
     "系统": "系统工具",
     "日常": "日常功能",
-    "股市": "虚拟股市",
 }
 
 
@@ -78,6 +77,7 @@ async def cmd_help(ctx: CommandContext, _matched=None) -> bool:
     lines = [f"机器人 v{_state.VERSION} 可用命令（发送 @bot [类别]帮助 查看详情）："]
     for key, short in HELP_SHORT.items():
         lines.append(f"  {key} — {short}")
+    lines.append("  互动菜单 — @bot 互动菜单，或戳机器人后点击表情（需管理员按群启用）")   # ← 新增（PR#1）
     reply = "\n".join(lines)
     await ctx.send(reply, at_user=ctx.uid_str)
     return True

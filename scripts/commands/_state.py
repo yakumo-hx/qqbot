@@ -93,10 +93,6 @@ ZHOULI_MAX_LENGTH = 300
 ZHOULI_RATE_LIMIT = 3
 ZHOULI_RATE_WINDOW = 3600
 
-# NapCat HTTP API
-NAPCAT_HTTP_URL = "http://127.0.0.1:6099"
-VOICE_TRANSCRIBE_TIMEOUT = 10
-
 # 像素画
 PIXEL_SIZE = 32
 PREVIEW_SCALE = 10
@@ -161,13 +157,16 @@ decision_engine = None
 send_message_fn = None
 send_group_image_fn = None
 send_group_file_fn = None
+interaction_menus = None                     # ← 新增（PR#1）
 
 
-def init_handlers(logger, de, send_msg_fn, send_img_fn, send_file_fn):
+def init_handlers(logger, de, send_msg_fn, send_img_fn, send_file_fn, menus=None):
     """初始化外部引用（reverse_bot.py 在 main() 中调用一次）"""
     global bot_logger, decision_engine, send_message_fn, send_group_image_fn, send_group_file_fn
+    global interaction_menus
     bot_logger = logger
     decision_engine = de
     send_message_fn = send_msg_fn
     send_group_image_fn = send_img_fn
     send_group_file_fn = send_file_fn
+    interaction_menus = menus

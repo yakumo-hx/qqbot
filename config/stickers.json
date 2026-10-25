@@ -1,0 +1,24 @@
+{
+  "_comment": "表情包功能运行时配置。改完即生效（读取方每次调用均重新读取，无缓存）——除 index_path 指向的索引由打标器生成外，其余均可手改。",
+  "enabled": true,
+  "library_root": "data/stickers/library",
+  "index_path": "data/stickers/index.json",
+  "tags_path": "config/sticker_tags.json",
+  "embedding_enabled": true,
+  "strong_score": 0.62,
+  "weak_score": 0.4,
+  "probability": 0.35,
+  "cooldown_seconds": 180,
+  "max_per_hour": 3,
+  "same_image_window_seconds": 3600,
+  "send_sub_type": 1,
+  "tag_max_items": 60,
+  "request_timeout_seconds": 60,
+  "_notes": {
+    "strong_score": "达到此分才允许「只发图」（独立成消息，抑制文字回复）",
+    "weak_score": "达到此分才允许「文字+图」。2026-10-14 由 0.45 下调至 0.40：实测【无字面命中的】合理语义场景分数集中在 0.39~0.45，0.45 会把它们一刀切掉；下调后仍有 probability 随机门兜底。注意：能用 keywords 解决的匹配问题不要用调阈值解决——调阈值是全局放宽，补关键词是局部变准。",
+    "probability": "随机降温门：表情包是点缀不是标配；0 表示关闭随机门（按分数直接放行），仅调试时用",
+    "send_sub_type": "1=按 QQ 贴图形态发送（源码取证支持）；若实机渲染不符预期，改成 0 即退回普通图片，无需改代码",
+    "tag_max_items": "打标时每类标签最多带几张候选项进 prompt"
+  }
+}

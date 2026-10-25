@@ -1,0 +1,23 @@
+{
+  "_comment": "消息指代（reference）配置。改动即生效（读取方不缓存）。设计见 qq_native_re/findings/reference/DESIGN.md。",
+  "enabled": true,
+  "groups": ["284517232"],
+  "index_max_per_group": 200,
+  "quote_max_chars": 40,
+  "roster_path": "data/roster.json",
+  "roster_retention_days": 180,
+  "roster_card_history_max": 5,
+  "roster_flush_seconds": 300,
+  "debug_log": true,
+  "_notes": {
+    "enabled": "总开关。false 时 reverse_bot 完全跳过注解，行为与改动前一致",
+    "index_max_per_group": "每群保留多少条消息元数据用于解引用；一条约 200B，200 条约 40KB",
+    "quote_max_chars": "渲染引用原文时的截断长度，防止撑爆上下文",
+    "roster_path": "名册文件（含真实 QQ 号，已在 .gitignore 排除）",
+    "roster_retention_days": "超过这个天数没出现过的人会被清理",
+    "roster_card_history_max": "每个 uid 在每个群保留几个不同的历史名片值",
+    "roster_flush_seconds": "名册最短落盘间隔（秒），避免每条消息都写盘",
+    "groups": "允许列表。非空 = 只在这些群启用；为空数组 = 所有群启用。试运行期用它把影响面收在一个群里",
+    "debug_log": "true 时把每条渲染结果打一行 [指代] 日志（试运行期建议开，可直接看到模型将看到什么）"
+  }
+}

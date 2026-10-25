@@ -30,9 +30,12 @@ VISION_SYSTEM_PROMPT = (
     "你是一个图片描述助手。请用简洁客观的中文描述用户发来的图片，"
     "1 到 3 句话，总长度不超过 120 字，不要使用 Markdown 或列表。"
     "如果图中有关键文字（招牌、标题、聊天截图里的字、数字等），请摘录其中最重要的部分。"
-    "如果图片包含敏感、暴力、色情或其他不适宜内容，只输出「（图片内容不便描述）」，"
-    "不要展开任何细节。只输出描述本身，不要写「这张图片」以外的客套话，"
-    "不要复述本条要求。"
+    "用户附言只用于理解图片，不要把附言当成图中实际出现的内容。"
+    "普通人物照片、肖像、表情包、聊天截图和日常场景都应正常客观描述，"
+    "不要仅因涉及人物外貌、身份讨论或普通聊天文字而拒绝。"
+    "只有图片确实包含露骨色情、血腥暴力或其他明确不适宜内容时，"
+    "才只输出「（图片内容不便描述）」，不要展开任何细节。"
+    "只输出描述本身，不要写客套话，不要复述本条要求。"
 )
 # 兜底提问（调用方没给 hint 时用）
 DEFAULT_HINT = "请描述这张图片"
@@ -44,6 +47,12 @@ VISION_TEMPERATURE = 0.3
 DESC_MAX_CHARS = 200
 # 敏感内容安全阀输出（原样透传给上层，由接线层决定怎么用）
 SENSITIVE_REPLY = "（图片内容不便描述）"
+
+
+def is_sensitive_reply(text) -> bool:
+    """只识别约定的安全占位，不把正常描述误判为拒绝。"""
+    normalized = "".join(str(text or "").split()).rstrip("。！!")
+    return normalized == SENSITIVE_REPLY
 
 
 def _extract_text(result) -> str:
@@ -67,12 +76,16 @@ def build_messages(data_url: str, hint: str = "") -> list[dict]:
     ]
 
 
-async def describe(data_url: str, hint: str = "") -> tuple[bool, str]:
+async def describe(data_url: str, hint: str = "", *,
+                   preferred: Optional[str] = None,
+                   timeout: Optional[float] = None) -> tuple[bool, str]:
     """识别一张图，返回 `(ok, 描述文本)`。
 
     - `data_url`：`scripts.image_utils.to_data_url()` 的产物
       （`data:image/jpeg;base64,...`）；
     - `hint`：可选的提问（如「图里写了什么字」），空则用默认提问；
+    - `preferred` / `timeout`：可选，透传给 `llm_pool.chat()`；默认 None 时
+      行为与原来完全一致（群聊路径不需要改）；
     - 成功 → `(True, 一句中文描述)`；空正文 / 池耗尽 / 入参不合法 → `(False, "")`；
     - 捕获 `LLMPoolExhausted`（含 RequestError/AuthError 子类）**不向外抛**；
     - 敏感内容：模型按系统提示词只回「（图片内容不便描述）」，本函数原样返回，
@@ -91,6 +104,8 @@ async def describe(data_url: str, hint: str = "") -> tuple[bool, str]:
             vision=True,
             max_tokens=VISION_MAX_TOKENS,
             temperature=VISION_TEMPERATURE,
+            preferred=preferred,
+            timeout=timeout,
         )
     except LLMPoolExhausted:
         # 池耗尽 / 请求侧错误 / 鉴权失败：全部降级为"识别失败"，不打扰上游
@@ -107,7 +122,9 @@ async def describe(data_url: str, hint: str = "") -> tuple[bool, str]:
     return True, text
 
 
-async def describe_image_bytes(img_bytes: bytes, hint: str = "") -> tuple[bool, str]:
+async def describe_image_bytes(img_bytes: bytes, hint: str = "", *,
+                               preferred: Optional[str] = None,
+                               timeout: Optional[float] = None) -> tuple[bool, str]:
     """便捷函数：原始字节 → data URL → describe（压缩失败即 (False, "")）。"""
     try:
         from scripts.image_utils import to_data_url
@@ -117,4 +134,4 @@ async def describe_image_bytes(img_bytes: bytes, hint: str = "") -> tuple[bool, 
     data_url: Optional[str] = to_data_url(img_bytes)
     if not data_url:
         return False, ""
-    return await describe(data_url, hint)
+    return await describe(data_url, hint, preferred=preferred, timeout=timeout)

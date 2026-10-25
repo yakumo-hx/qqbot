@@ -8,8 +8,8 @@
     ["glm-5.3-flash"],
     ["qwen3.8-reasoner", "qwen-reasoner"]
   ],
-  "attempt_timeout_seconds": 20,
-  "total_budget_seconds": 45,
+  "attempt_timeout_seconds": 45,
+  "total_budget_seconds": 55,
   "cooldown_seconds": 60,
   "hard_cooldown_seconds": 600,
   "max_tokens_default": 500,

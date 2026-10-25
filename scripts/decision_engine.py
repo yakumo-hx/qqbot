@@ -75,12 +75,28 @@ _EMOJI_ONLY = re.compile(
 )
 
 # ---------- 昵称前缀剥离（防止 LLM 模仿上下文格式输出 "[昵称]: 内容"） ----------
-_NICKNAME_PREFIX = re.compile(r'^\[.+?\][:：]\s*')
+# 2026-10-15 扩展：新增指代格式 `[昵称@某人] …` / `[昵称 回复某人「…」] …`。
+# 只在括号内容**确实含 @ 或 回复**时才剥——否则会误伤模型正常输出的 `[笑] 好吧`。
+_NICKNAME_PREFIX = re.compile(
+    r'^\[.+?\][:：]\s*'
+    r'|^\[[^\]\n]{1,80}(?:@|回复)[^\]\n]{0,80}\]\s*'
+)
+
+# ---------- 指代注解层（可选依赖；不可用时行为与改动前完全一致） ----------
+try:
+    from scripts import reference as _reference
+except Exception:  # pragma: no cover
+    try:
+        import reference as _reference  # type: ignore
+    except Exception:
+        _reference = None
 
 # ---------- CQ 码剥离（仅用于生成 target 的"送模型看的内容"） ----------
 # 群聊上下文 context 不做任何删改；这里只是避免把 [CQ:at,…] / [CQ:image,…]
 # 原样塞进「你需要回应的最新消息」——那会与"不要包含 CQ 码"的指令自相矛盾。
-_CQ_CODE = re.compile(r"\[CQ:[^\]]*\]")
+# 2026-10-15：加未闭合兜底——`[CQ:face,...raw={...}` 这类长参数在异常/截断场景下
+# 没有 `]`，严格正则会漏掉，导致整段 CQ 原文被塞进「你需要回应的最新消息」。
+_CQ_CODE = re.compile(r"\[CQ:[^\]]{0,2000}(?:\]|$)")
 
 # ---------- 内容安全：敏感关键词列表 ----------
 # 安全规则完全由代码层执行，不依赖 LLM prompt。
@@ -134,13 +150,67 @@ except OSError as _e:
     _console.stream.write(f"[警告] 无法写入文件日志 logs\\bot.{_LOG_DATE}.log（权限不足），已降级为仅控制台日志\n")
 
 
+# ========== 表情包：回复形态契约（data/stickers/SCHEMA.md §3 冻结）==========
+_LEVEL_NONE = "none"
+_LEVEL_WEAK = "weak"
+_LEVEL_STRONG = "strong"
+
+
+class ReplyResult:
+    """回复链的输出形态。代替原先的裸字符串 reply_text。
+
+    - text 非空、sticker 为空 → 只发文字（**与接线前完全一致**）
+    - text 为空、sticker 非空 → 只发图（本轮跳过了模型调用）
+    - 两者都非空             → 先发文字，再补一张图
+    """
+
+    __slots__ = ("text", "sticker")
+
+    def __init__(self, text: str = "", sticker: str = ""):
+        self.text = text or ""
+        self.sticker = sticker or ""
+
+    @property
+    def is_sticker_only(self) -> bool:
+        return bool(self.sticker) and not self.text
+
+    def __repr__(self) -> str:
+        return "ReplyResult(text=%r, sticker=%r)" % (self.text[:20], self.sticker)
+
+
+class _NoPick:
+    """表情检索不可用时的兜底返回值（形状与 StickerPick 一致）。"""
+    level = _LEVEL_NONE
+    path = ""
+    score = 0.0
+    reason = "表情检索不可用"
+
+
+# 表情引擎：模块级懒加载单例。构造失败 → 永久 None，功能整体静默关闭。
+_STICKER_ENGINE = None
+_STICKER_TRIED = False
+
+
+def _get_sticker_engine():
+    global _STICKER_ENGINE, _STICKER_TRIED
+    if not _STICKER_TRIED:
+        _STICKER_TRIED = True
+        try:
+            from scripts.sticker import build_default_engine
+            _STICKER_ENGINE = build_default_engine()
+        except Exception:
+            _STICKER_ENGINE = None
+    return _STICKER_ENGINE
+
+
 class ContextRingBuffer:
     """按群存储的环形消息缓冲区。"""
 
     def __init__(self, max_size: int = 50):
         self._buffer: deque = deque(maxlen=max_size)
 
-    def add(self, user_id: str, nickname: str, content: str, timestamp: float = 0.0):
+    def add(self, user_id: str, nickname: str, content: str, timestamp: float = 0.0,
+            ref: dict = None):
         if not content or not content.strip():
             return
         self._buffer.append({
@@ -148,6 +218,7 @@ class ContextRingBuffer:
             "nickname": str(nickname),
             "content": str(content).strip(),
             "timestamp": timestamp or time.time(),
+            "ref": ref if isinstance(ref, dict) else None,   # 指代注解（可为 None）
         })
 
     def get_messages(self, max_count: int = 30, max_age_seconds: float = 300) -> list:
@@ -213,6 +284,8 @@ class DecisionEngine:
         )
         self._last_reply: dict = {}
         self._last_reply_time: dict[str, float] = {}       # 冷却计时（按群）
+        # 主动发言限流：每群过去 window 秒内的发言时间戳（滚动窗口，按群独立计数）
+        self._proactive_times: defaultdict[str, deque] = defaultdict(deque)
         self._recent_replies: defaultdict[str, deque] = \
             defaultdict(lambda: deque(maxlen=self.SIMILARITY_WINDOW))  # 相似度去重
         # 防复读：本群最近 3 条**自己发出的**回复（下发为 avoid_recent + 记录相似度指标）
@@ -385,7 +458,16 @@ class DecisionEngine:
                     if group_profiles:
                         profile_lines = []
                         for uid, desc in group_profiles.items():
-                            profile_lines.append(f"- {uid}: {desc}")
+                            # 用展示名代替裸 QQ 号，否则模型无法与上下文里的名字对应
+                            label = str(uid)
+                            try:
+                                if _reference:
+                                    nm = _reference.roster_mod.display_of(gid, uid)
+                                    if nm and nm != str(uid):
+                                        label = f"{nm}({uid})"
+                            except Exception:
+                                pass
+                            profile_lines.append(f"- {label}: {desc}")
                         if profile_lines:
                             profile_text = "\n\n【群友印象】\n" + "\n".join(profile_lines)
             except Exception:
@@ -1171,10 +1253,14 @@ class DecisionEngine:
     TOPIC_SCAN_WINDOW = 5         # 扫描窗口（每次对比的旧消息条数）
     TOPIC_SIM_THRESHOLD = 0.35    # 相似度阈值：低于此值视为话题切换
 
-    def add_message(self, gid: str, uid: str, nickname: str, content: str):
-        """写入一条消息到群上下文缓冲区（供外部调用）。"""
+    def add_message(self, gid: str, uid: str, nickname: str, content: str,
+                    ref: dict = None):
+        """写入一条消息到群上下文缓冲区（供外部调用）。
+
+        ref：指代注解（scripts/reference.py 的产出）。为 None 时行为与改动前一致。
+        """
         ctx = self._contexts[gid]
-        ctx.add(uid, nickname, content)
+        ctx.add(uid, nickname, content, ref=ref)
 
     async def _detect_topic_switch(self, gid: str) -> int:
         """检测话题切换边界，返回应保留的最近消息条数。
@@ -1286,13 +1372,26 @@ class DecisionEngine:
         if not msgs:
             return "（暂无上下文）"
 
+        # 指代注解：**本群**启用时用 reference 渲染，否则回退到旧格式（行为完全一致）
+        ref_on = bool(_reference) and _reference.is_enabled_for(gid)
+
         lines = []
         for m in msgs:
             # 跳过系统消息（用户画像），不加入上下文显示
             if m["user_id"] == "system":
                 continue
-            name = m["nickname"] or m["user_id"]
-            lines.append(f"[{name}]: {m['content']}")
+            line = ""
+            rec = m.get("ref")
+            if ref_on and isinstance(rec, dict):
+                try:
+                    line = _reference.render_for(gid, rec)
+                except Exception:
+                    line = ""
+            if not line:
+                # 回退：未启用 / 注解失败 / 无正文无 @，都与改动前一致
+                name = m["nickname"] or m["user_id"]
+                line = f"[{name}]: {m['content']}"
+            lines.append(line)
         return "\n".join(lines)
 
     def _get_density(self, gid: str) -> float:
@@ -1307,13 +1406,14 @@ class DecisionEngine:
         low = cfg.get("density_low_threshold", 3)
         default = cfg.get("reply_threshold_default", 0.6)
 
+        swing = cfg.get("threshold_swing", 0.15)   # 2026-10-20：原先写死 0.15，现可配置
         if density >= high:
-            return default - 0.15
+            return default - swing
         elif density <= low:
-            return default + 0.15
+            return default + swing
         else:
             ratio = (density - low) / max(high - low, 1)
-            return (default + 0.15) - ratio * 0.30
+            return (default + swing) - ratio * (2 * swing)
 
     # ---------- 分类 ----------
 
@@ -1404,13 +1504,16 @@ class DecisionEngine:
         is_at_bot: bool = False,
         sender_nickname: str = "",
         search_on: bool = False,
-    ) -> Tuple[bool, Optional[str]]:
+        sticker_on: bool = False,
+    ) -> Tuple[bool, Optional["ReplyResult"]]:
         """
         判断是否应回复并生成回复内容。
-        返回: (should_reply: bool, reply_text: str | None)
+        返回: (should_reply: bool, ReplyResult | None)
 
         参数 search_on：本群联网搜索功能位是否开启（**调用方** reverse_bot 传入，
         与该群其它功能位同源）。默认 False = 不搜（fail-closed，行为与接线前一致）。
+        参数 sticker_on：本群表情包功能位是否开启，同样由调用方传入。
+        默认 False = 不发表情（fail-closed，此时行为与接线前**完全一致**）。
         """
         gid = str(group_id)
 
@@ -1418,7 +1521,8 @@ class DecisionEngine:
         g_lock = await self._get_group_lock(gid)
         async with g_lock:
             return await self._should_reply_locked(
-                message, user_id, group_id, is_at_bot, sender_nickname, search_on
+                message, user_id, group_id, is_at_bot, sender_nickname, search_on,
+                sticker_on,
             )
 
     async def _should_reply_locked(
@@ -1429,7 +1533,8 @@ class DecisionEngine:
         is_at_bot: bool = False,
         sender_nickname: str = "",
         search_on: bool = False,
-    ) -> Tuple[bool, Optional[str]]:
+        sticker_on: bool = False,
+    ) -> Tuple[bool, Optional["ReplyResult"]]:
         """should_reply 的内部实现，调用方必须持有 _group_locks[gid]"""
         self._debug_info = {}
         t_start = time.time()
@@ -1442,6 +1547,18 @@ class DecisionEngine:
         # ===== @bot 强制回复（唯一硬规则，前置过滤之前判断） =====
         if is_at_bot:
             self._debug("决策", "@bot 强制回复")
+
+            # ===== 表情步（本地检索，零 API 调用）=====
+            # 放在生成文字之前：strong 档可以直接出图，完全跳过模型调用。
+            pick = self._pick_sticker(gid, message, sticker_on)
+            if pick.level == _LEVEL_STRONG:
+                self._debug("表情", f"strong 只发图（{os.path.basename(pick.path)}）")
+                self._record_reply(gid, "")          # 纯图同样要吃冷却，否则会连发
+                self._debug("耗时_ms", str(int((time.time() - t_start) * 1000)))
+                return (True, ReplyResult(text="", sticker=pick.path))
+            if pick.level != _LEVEL_NONE:
+                self._debug("表情", f"{pick.level} 文字+图（{os.path.basename(pick.path)}）")
+
             # 定向回复：本轮要回应的就是这条 @bot 的消息
             target = self._build_target(message, user_id, sender_nickname)
             self._debug("回应目标",
@@ -1464,7 +1581,9 @@ class DecisionEngine:
                 return (False, None)
             self._record_reply(gid, reply)
             self._debug("耗时_ms", str(int((time.time() - t_start) * 1000)))
-            return (True, reply)
+            return (True, ReplyResult(
+                text=reply,
+                sticker=pick.path if pick.level != _LEVEL_NONE else ""))
 
         # ===== 前置过滤器（@bot 已处理，此处仅过滤非 @bot 消息）=====
         skip_reason = self._pre_filter(message)
@@ -1474,12 +1593,25 @@ class DecisionEngine:
             return (False, None)
 
         # ===== 冷却检查 =====
+        cooldown = self.config.get("reply_cooldown_seconds", self.COOLDOWN_SECONDS)
         last_time = self._last_reply_time.get(gid, 0)
         elapsed = time.time() - last_time
-        if elapsed < self.COOLDOWN_SECONDS:
-            self._debug("冷却", f"距上次回复仅{elapsed:.1f}s，跳过")
+        if elapsed < cooldown:
+            self._debug("冷却", f"距上次回复仅{elapsed:.1f}s（需{cooldown:.0f}s），跳过")
             self._debug("耗时_ms", str(int((time.time() - t_start) * 1000)))
             return (False, None)
+
+        # ===== 主动发言限流（每小时硬上限，按群独立计数）=====
+        # 位置关键：本闸门位于 @bot 硬规则之后，所以 **@bot / 别名回复永远不受限流影响**。
+        # cap<=0 视为不限制（回退开关）。
+        cap = self.config.get("proactive_max_per_hour", 5)
+        window = self.config.get("proactive_window_seconds", 3600)
+        if cap > 0:
+            used = self._proactive_count_within(gid, window)
+            if used >= cap:
+                self._debug("限流", f"主动发言已达 {used}/{cap} 次每 {int(window)}s，跳过")
+                self._debug("耗时_ms", str(int((time.time() - t_start) * 1000)))
+                return (False, None)
 
         # ===== 密度检查 =====
         density = self._get_density(gid)
@@ -1517,6 +1649,17 @@ class DecisionEngine:
             return (False, None)
 
         self._debug("最终", f"回复 (label={label}, score={score:.4f})")
+
+        # ===== 表情步（本地检索，零 API 调用）=====
+        pick = self._pick_sticker(gid, message, sticker_on)
+        if pick.level == _LEVEL_STRONG:
+            # 只发图：本轮完全跳过模型调用（当前网关下单次要走 66~126s）
+            self._debug("表情", f"strong 只发图（{os.path.basename(pick.path)}）")
+            self._record_reply(gid, "")
+            self._debug("耗时_ms", str(int((time.time() - t_start) * 1000)))
+            return (True, ReplyResult(text="", sticker=pick.path))
+        if pick.level != _LEVEL_NONE:
+            self._debug("表情", f"{pick.level} 文字+图（{os.path.basename(pick.path)}）")
 
         # ===== 生成回复 =====
         # 定向回复：非 @ 路径同样把"刚触发了回复的这条消息"作为回应对象，
@@ -1557,13 +1700,48 @@ class DecisionEngine:
 
         self._record_reply(gid, reply)
         self._debug("耗时_ms", str(int((time.time() - t_start) * 1000)))
-        return (True, reply)
+        return (True, ReplyResult(
+            text=reply,
+            sticker=pick.path if pick.level != _LEVEL_NONE else ""))
+
+    def _proactive_count_within(self, gid: str, window: float) -> int:
+        """返回该群过去 window 秒内的主动发言次数（滚动窗口，顺带清理过期记录）。"""
+        buf = self._proactive_times.get(gid)
+        if not buf:
+            return 0
+        cutoff = time.time() - window
+        while buf and buf[0] < cutoff:
+            buf.popleft()
+        return len(buf)
 
     def _record_reply(self, gid: str, reply: str):
-        """记录回复（更新冷却时间、最近回复缓存）。"""
-        self._last_reply_time[gid] = time.time()
-        self._last_reply[gid] = reply
-        self._recent_replies[gid].append(reply)
+        """记录回复（更新冷却时间、最近回复缓存、主动发言限流计数）。
+
+        纯图回复传空串：冷却照常更新（否则机器人会连发图），
+        但**不污染**文字精确去重与相似度去重窗口——那是文字专用的状态。
+        """
+        now = time.time()
+        self._last_reply_time[gid] = now
+        self._proactive_times[gid].append(now)   # 计入主动发言限流（纯图也占名额）
+        if reply:
+            self._last_reply[gid] = reply
+            self._recent_replies[gid].append(reply)
+
+    def _pick_sticker(self, gid: str, message: str, sticker_on: bool):
+        """本地表情检索（零 API 调用）。
+
+        任何异常、任何不可用（功能位关 / 引擎构造失败 / 索引坏 / 图库空）
+        一律返回 none 形状的兜底对象，**绝不影响文字链**。
+        """
+        if not sticker_on:
+            return _NoPick()
+        engine = _get_sticker_engine()
+        if engine is None:
+            return _NoPick()
+        try:
+            return engine.pick(gid, message, True)
+        except Exception:
+            return _NoPick()
 
     # ---------- 调试 ----------
 
@@ -1592,7 +1770,10 @@ if __name__ == "__main__":
         )
         print(f"决策: {'回复' if should else '不回复'}")
         if reply:
-            print(f"回复: {reply}")
+            if reply.text:
+                print(f"回复: {reply.text}")
+            if reply.sticker:
+                print(f"表情: {reply.sticker}")
         print(f"调试: {engine.get_debug_info()}")
 
     asyncio.run(test())

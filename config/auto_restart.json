@@ -1,0 +1,5 @@
+{
+  "alert":   { "enabled": true,  "after_seconds": 5,  "repeat_seconds": 120,  "startup_grace_seconds": 60 },
+  "restart": { "enabled": true,  "after_seconds": 60,  "min_interval_seconds": 300, "max_per_hour": 3 },
+  "dry_run": true
+}
