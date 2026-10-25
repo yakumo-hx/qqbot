@@ -1,0 +1,10 @@
+# 已废弃（0.0.1 人设拆分后）
+
+私聊人设已完全独立，见 `private/` 目录：
+
+- `private/identity.md`
+- `private/voice.md`
+- `private/relationship.json`
+- `private/corrections.json`
+
+本文件不再被任何代码读取，可手动删除。

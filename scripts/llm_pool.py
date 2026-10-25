@@ -758,10 +758,13 @@ def _build_attempt_order(
             )
         return [("disabled", preferred)]
 
+    # 视觉专用模型可能只出现在 vision_models、不在聊天 tiers 里（例如 qwen3.8-chat）。
+    # 对 vision=True 的调用，允许把这类 preferred 放到最前面；非视觉路径行为不变。
+    preferred_in_tiers = any(preferred in tier for tier in cfg["tiers"])
     if (
         preferred
-        and any(preferred in tier for tier in cfg["tiers"])
         and _in_vision_scope(preferred)
+        and (preferred_in_tiers or vision)
     ):
         seen.add(preferred)
         if not _is_cooling(preferred):
@@ -837,6 +840,7 @@ async def chat(
     response_format: Optional[dict] = None,
     preferred: Optional[str] = None,
     timeout: Optional[float] = None,
+    budget: Optional[float] = None,
     vision: bool = False,
 ) -> tuple[str, str]:
     """池化调用，返回 (text, model_used)。全部失败抛 LLMPoolExhausted。
@@ -848,6 +852,8 @@ async def chat(
 
     timeout 给了就用它作为单次尝试上限（仍受 total_budget 约束），
     这样 decision_engine 的子进程 60s 外框也安全。
+    budget 给了就用它作为本次调用的总预算（默认仍取 config 的 total_budget_seconds），
+    私聊快车道用 15s 包住整次调用，不影响群聊路径。
     max_tokens 会被抬到该模型的下限（config 的 min_max_tokens / model_overrides），
     传小了也不会让思考型模型返回空内容。
     vision=True（V1 新增）时尝试序列只在 config 的 vision_models 白名单内挑
@@ -864,7 +870,7 @@ async def chat(
     attempt_timeout = float(
         timeout if timeout and timeout > 0 else cfg["attempt_timeout_seconds"]
     )
-    total_budget = float(cfg["total_budget_seconds"])
+    total_budget = float(budget if budget and budget > 0 else cfg["total_budget_seconds"])
     cooldown = float(cfg["cooldown_seconds"])
     hard_cooldown = float(cfg["hard_cooldown_seconds"])
     base_url = str(cfg["base_url"]).rstrip("/")
