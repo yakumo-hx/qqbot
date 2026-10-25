@@ -13,10 +13,23 @@
 user_profiles.json
 menu_data.json
 scripts/sign_in_data.json
+data/roster.json
 config/characters/*/memories/group/
 config/characters/*.backup/
 config/characters/*.backup
 scripts/virtual_stock/data/
+
+# ---------- 私聊陪伴版运行时数据（永久记忆 / 会话流水，不入库）----------
+data/private/
+
+# 单测临时目录（一次失败的 mkdtemp ACL 遗留，已无内容）
+data/_test_private/
+
+# ---------- 表情包图库（图片不入库；索引与 schema 入库）----------
+data/stickers/library/
+
+# ---------- DSH 沙箱 ACL 诊断产物（本机一次性排障，含权限路径信息）----------
+data/stickers_acl_report/
 
 # ---------- 日志 ----------
 logs/
@@ -118,3 +131,9 @@ scripts/_*.tmp
 Thumbs.db
 Desktop.ini
 nul
+
+# ---------- 表情包素材与元数据（体积 + 第三方版权，整目录不进公开仓库）----------
+data/stickers/
+
+# ---------- PR 上游快照（可重新抓取，避免重复代码入库）----------
+qq_native_re/findings/pr1/upstream/
