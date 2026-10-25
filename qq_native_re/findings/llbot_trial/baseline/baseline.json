@@ -1,0 +1,1514 @@
+{
+  "window": {
+    "start": "2026-10-18",
+    "end": "2026-10-24"
+  },
+  "napcat": {
+    "files": [
+      {
+        "file": "2026-10-18_07-40-04.067.log",
+        "size": 724316,
+        "start": "2026-10-18T07:40:04+08:00",
+        "lines": 647,
+        "kicked": 1,
+        "net_err_1006514": 0,
+        "login_invalid": 1,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-18_09-48-37.989.log",
+        "size": 140999,
+        "start": "2026-10-18T09:48:37+08:00",
+        "lines": 121,
+        "kicked": 1,
+        "net_err_1006514": 0,
+        "login_invalid": 1,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-18_10-22-58.462.log",
+        "size": 1284318,
+        "start": "2026-10-18T10:22:58+08:00",
+        "lines": 787,
+        "kicked": 0,
+        "net_err_1006514": 0,
+        "login_invalid": 0,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-18_11-54-10.915.log",
+        "size": 430428,
+        "start": "2026-10-18T11:54:10+08:00",
+        "lines": 360,
+        "kicked": 1,
+        "net_err_1006514": 0,
+        "login_invalid": 1,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-18_13-47-53.753.log",
+        "size": 1313401,
+        "start": "2026-10-18T13:47:53+08:00",
+        "lines": 896,
+        "kicked": 1,
+        "net_err_1006514": 0,
+        "login_invalid": 1,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-18_15-36-37.831.log",
+        "size": 632629,
+        "start": "2026-10-18T15:36:37+08:00",
+        "lines": 455,
+        "kicked": 1,
+        "net_err_1006514": 0,
+        "login_invalid": 1,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-18_17-50-55.818.log",
+        "size": 2796395,
+        "start": "2026-10-18T17:50:55+08:00",
+        "lines": 1754,
+        "kicked": 1,
+        "net_err_1006514": 0,
+        "login_invalid": 1,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-18_21-31-10.633.log",
+        "size": 78694,
+        "start": "2026-10-18T21:31:10+08:00",
+        "lines": 113,
+        "kicked": 1,
+        "net_err_1006514": 0,
+        "login_invalid": 1,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-18_21-33-53.066.log",
+        "size": 1509495,
+        "start": "2026-10-18T21:33:53+08:00",
+        "lines": 938,
+        "kicked": 0,
+        "net_err_1006514": 0,
+        "login_invalid": 0,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 0
+      },
+      {
+        "file": "2026-10-19_08-26-59.734.log",
+        "size": 2624902,
+        "start": "2026-10-19T08:26:59+08:00",
+        "lines": 1729,
+        "kicked": 0,
+        "net_err_1006514": 0,
+        "login_invalid": 0,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-19_10-28-03.562.log",
+        "size": 89698,
+        "start": "2026-10-19T10:28:03+08:00",
+        "lines": 63,
+        "kicked": 1,
+        "net_err_1006514": 0,
+        "login_invalid": 1,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-19_10-31-55.775.log",
+        "size": 2057601,
+        "start": "2026-10-19T10:31:55+08:00",
+        "lines": 1305,
+        "kicked": 0,
+        "net_err_1006514": 0,
+        "login_invalid": 0,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 0
+      },
+      {
+        "file": "2026-10-19_12-03-44.675.log",
+        "size": 183181,
+        "start": "2026-10-19T12:03:44+08:00",
+        "lines": 140,
+        "kicked": 1,
+        "net_err_1006514": 0,
+        "login_invalid": 1,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-19_12-39-38.826.log",
+        "size": 3340,
+        "start": "2026-10-19T12:39:38+08:00",
+        "lines": 30,
+        "kicked": 0,
+        "net_err_1006514": 0,
+        "login_invalid": 0,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 0
+      },
+      {
+        "file": "2026-10-19_13-24-30.027.log",
+        "size": 2144255,
+        "start": "2026-10-19T13:24:30+08:00",
+        "lines": 1363,
+        "kicked": 1,
+        "net_err_1006514": 0,
+        "login_invalid": 1,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-19_15-10-10.438.log",
+        "size": 1399637,
+        "start": "2026-10-19T15:10:10+08:00",
+        "lines": 1041,
+        "kicked": 1,
+        "net_err_1006514": 0,
+        "login_invalid": 1,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-19_18-34-27.949.log",
+        "size": 7517,
+        "start": "2026-10-19T18:34:27+08:00",
+        "lines": 38,
+        "kicked": 1,
+        "net_err_1006514": 0,
+        "login_invalid": 1,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-19_18-39-37.790.log",
+        "size": 1893884,
+        "start": "2026-10-19T18:39:37+08:00",
+        "lines": 1236,
+        "kicked": 0,
+        "net_err_1006514": 0,
+        "login_invalid": 0,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 0
+      },
+      {
+        "file": "2026-10-20_07-29-30.280.log",
+        "size": 1191526,
+        "start": "2026-10-20T07:29:30+08:00",
+        "lines": 862,
+        "kicked": 0,
+        "net_err_1006514": 0,
+        "login_invalid": 0,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 0
+      },
+      {
+        "file": "2026-10-20_10-15-42.640.log",
+        "size": 2921537,
+        "start": "2026-10-20T10:15:42+08:00",
+        "lines": 1822,
+        "kicked": 0,
+        "net_err_1006514": 0,
+        "login_invalid": 0,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 3
+      },
+      {
+        "file": "2026-10-20_13-19-13.596.log",
+        "size": 1826719,
+        "start": "2026-10-20T13:19:13+08:00",
+        "lines": 1195,
+        "kicked": 0,
+        "net_err_1006514": 0,
+        "login_invalid": 0,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-20_15-21-16.901.log",
+        "size": 4824880,
+        "start": "2026-10-20T15:21:16+08:00",
+        "lines": 2751,
+        "kicked": 0,
+        "net_err_1006514": 0,
+        "login_invalid": 0,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-20_18-38-06.644.log",
+        "size": 275211,
+        "start": "2026-10-20T18:38:06+08:00",
+        "lines": 206,
+        "kicked": 1,
+        "net_err_1006514": 0,
+        "login_invalid": 1,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-20_18-52-58.635.log",
+        "size": 749436,
+        "start": "2026-10-20T18:52:58+08:00",
+        "lines": 484,
+        "kicked": 1,
+        "net_err_1006514": 0,
+        "login_invalid": 1,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-20_19-11-02.649.log",
+        "size": 82764,
+        "start": "2026-10-20T19:11:02+08:00",
+        "lines": 124,
+        "kicked": 1,
+        "net_err_1006514": 0,
+        "login_invalid": 1,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-20_19-19-32.415.log",
+        "size": 101345,
+        "start": "2026-10-20T19:19:32+08:00",
+        "lines": 121,
+        "kicked": 1,
+        "net_err_1006514": 0,
+        "login_invalid": 1,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-20_19-23-43.223.log",
+        "size": 208686,
+        "start": "2026-10-20T19:23:43+08:00",
+        "lines": 179,
+        "kicked": 1,
+        "net_err_1006514": 0,
+        "login_invalid": 1,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-20_19-36-32.233.log",
+        "size": 93287,
+        "start": "2026-10-20T19:36:32+08:00",
+        "lines": 134,
+        "kicked": 1,
+        "net_err_1006514": 0,
+        "login_invalid": 1,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-20_19-55-07.557.log",
+        "size": 68907,
+        "start": "2026-10-20T19:55:07+08:00",
+        "lines": 73,
+        "kicked": 1,
+        "net_err_1006514": 0,
+        "login_invalid": 1,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-20_20-08-54.886.log",
+        "size": 22608,
+        "start": "2026-10-20T20:08:54+08:00",
+        "lines": 46,
+        "kicked": 1,
+        "net_err_1006514": 0,
+        "login_invalid": 1,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-20_20-32-59.120.log",
+        "size": 3553,
+        "start": "2026-10-20T20:32:59+08:00",
+        "lines": 30,
+        "kicked": 0,
+        "net_err_1006514": 0,
+        "login_invalid": 0,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 0
+      },
+      {
+        "file": "2026-10-20_20-35-25.569.log",
+        "size": 521782,
+        "start": "2026-10-20T20:35:25+08:00",
+        "lines": 398,
+        "kicked": 0,
+        "net_err_1006514": 0,
+        "login_invalid": 0,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 2
+      },
+      {
+        "file": "2026-10-20_22-10-47.936.log",
+        "size": 352078,
+        "start": "2026-10-20T22:10:47+08:00",
+        "lines": 365,
+        "kicked": 0,
+        "net_err_1006514": 0,
+        "login_invalid": 0,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 0
+      },
+      {
+        "file": "2026-10-21_06-45-23.626.log",
+        "size": 2411804,
+        "start": "2026-10-21T06:45:23+08:00",
+        "lines": 1574,
+        "kicked": 1,
+        "net_err_1006514": 0,
+        "login_invalid": 1,
+        "qr_lines": 4,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-21_08-41-50.680.log",
+        "size": 469073,
+        "start": "2026-10-21T08:41:50+08:00",
+        "lines": 384,
+        "kicked": 0,
+        "net_err_1006514": 0,
+        "login_invalid": 0,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 2
+      },
+      {
+        "file": "2026-10-21_09-38-04.282.log",
+        "size": 330646,
+        "start": "2026-10-21T09:38:04+08:00",
+        "lines": 238,
+        "kicked": 1,
+        "net_err_1006514": 0,
+        "login_invalid": 1,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 2
+      },
+      {
+        "file": "2026-10-21_10-43-30.113.log",
+        "size": 93482,
+        "start": "2026-10-21T10:43:30+08:00",
+        "lines": 98,
+        "kicked": 1,
+        "net_err_1006514": 0,
+        "login_invalid": 1,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-21_10-50-31.985.log",
+        "size": 595625,
+        "start": "2026-10-21T10:50:31+08:00",
+        "lines": 417,
+        "kicked": 0,
+        "net_err_1006514": 0,
+        "login_invalid": 0,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 0
+      },
+      {
+        "file": "2026-10-21_11-27-10.073.log",
+        "size": 399613,
+        "start": "2026-10-21T11:27:10+08:00",
+        "lines": 299,
+        "kicked": 0,
+        "net_err_1006514": 0,
+        "login_invalid": 0,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-21_12-09-29.711.log",
+        "size": 563188,
+        "start": "2026-10-21T12:09:29+08:00",
+        "lines": 372,
+        "kicked": 0,
+        "net_err_1006514": 0,
+        "login_invalid": 0,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 0
+      },
+      {
+        "file": "2026-10-21_12-57-35.813.log",
+        "size": 61001,
+        "start": "2026-10-21T12:57:35+08:00",
+        "lines": 141,
+        "kicked": 0,
+        "net_err_1006514": 0,
+        "login_invalid": 0,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 0
+      },
+      {
+        "file": "2026-10-21_13-19-11.229.log",
+        "size": 109340,
+        "start": "2026-10-21T13:19:11+08:00",
+        "lines": 102,
+        "kicked": 1,
+        "net_err_1006514": 0,
+        "login_invalid": 1,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-21_13-39-14.646.log",
+        "size": 487146,
+        "start": "2026-10-21T13:39:14+08:00",
+        "lines": 366,
+        "kicked": 0,
+        "net_err_1006514": 0,
+        "login_invalid": 0,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-21_15-44-13.648.log",
+        "size": 3224321,
+        "start": "2026-10-21T15:44:13+08:00",
+        "lines": 1932,
+        "kicked": 1,
+        "net_err_1006514": 0,
+        "login_invalid": 1,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-21_21-14-46.255.log",
+        "size": 874021,
+        "start": "2026-10-21T21:14:46+08:00",
+        "lines": 627,
+        "kicked": 0,
+        "net_err_1006514": 0,
+        "login_invalid": 0,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 0
+      },
+      {
+        "file": "2026-10-22_07-24-16.312.log",
+        "size": 713713,
+        "start": "2026-10-22T07:24:16+08:00",
+        "lines": 536,
+        "kicked": 1,
+        "net_err_1006514": 0,
+        "login_invalid": 1,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-22_10-41-45.909.log",
+        "size": 830211,
+        "start": "2026-10-22T10:41:45+08:00",
+        "lines": 523,
+        "kicked": 0,
+        "net_err_1006514": 0,
+        "login_invalid": 0,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 2
+      },
+      {
+        "file": "2026-10-22_12-38-24.552.log",
+        "size": 4289,
+        "start": "2026-10-22T12:38:24+08:00",
+        "lines": 35,
+        "kicked": 1,
+        "net_err_1006514": 0,
+        "login_invalid": 1,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-22_12-40-45.346.log",
+        "size": 874979,
+        "start": "2026-10-22T12:40:45+08:00",
+        "lines": 661,
+        "kicked": 1,
+        "net_err_1006514": 0,
+        "login_invalid": 1,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-22_14-58-14.164.log",
+        "size": 530737,
+        "start": "2026-10-22T14:58:14+08:00",
+        "lines": 380,
+        "kicked": 0,
+        "net_err_1006514": 0,
+        "login_invalid": 0,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-22_17-36-07.793.log",
+        "size": 1368383,
+        "start": "2026-10-22T17:36:07+08:00",
+        "lines": 888,
+        "kicked": 1,
+        "net_err_1006514": 0,
+        "login_invalid": 1,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-22_21-45-48.363.log",
+        "size": 1169266,
+        "start": "2026-10-22T21:45:48+08:00",
+        "lines": 763,
+        "kicked": 0,
+        "net_err_1006514": 0,
+        "login_invalid": 0,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-23_10-25-08.842.log",
+        "size": 534650,
+        "start": "2026-10-23T10:25:08+08:00",
+        "lines": 399,
+        "kicked": 1,
+        "net_err_1006514": 0,
+        "login_invalid": 1,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 2
+      },
+      {
+        "file": "2026-10-23_11-05-28.882.log",
+        "size": 88886,
+        "start": "2026-10-23T11:05:28+08:00",
+        "lines": 99,
+        "kicked": 0,
+        "net_err_1006514": 0,
+        "login_invalid": 0,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 0
+      },
+      {
+        "file": "2026-10-23_11-22-55.887.log",
+        "size": 587386,
+        "start": "2026-10-23T11:22:55+08:00",
+        "lines": 403,
+        "kicked": 1,
+        "net_err_1006514": 0,
+        "login_invalid": 1,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 2
+      },
+      {
+        "file": "2026-10-23_12-46-13.126.log",
+        "size": 1516836,
+        "start": "2026-10-23T12:46:13+08:00",
+        "lines": 949,
+        "kicked": 0,
+        "net_err_1006514": 2,
+        "login_invalid": 0,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 0
+      },
+      {
+        "file": "2026-10-23_16-40-26.198.log",
+        "size": 1133233,
+        "start": "2026-10-23T16:40:26+08:00",
+        "lines": 762,
+        "kicked": 0,
+        "net_err_1006514": 4,
+        "login_invalid": 0,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 0
+      },
+      {
+        "file": "2026-10-23_21-35-51.791.log",
+        "size": 595206,
+        "start": "2026-10-23T21:35:51+08:00",
+        "lines": 473,
+        "kicked": 0,
+        "net_err_1006514": 0,
+        "login_invalid": 0,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 2
+      },
+      {
+        "file": "2026-10-24_07-14-23.517.log",
+        "size": 971542,
+        "start": "2026-10-24T07:14:23+08:00",
+        "lines": 713,
+        "kicked": 1,
+        "net_err_1006514": 0,
+        "login_invalid": 1,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-24_11-23-35.662.log",
+        "size": 765271,
+        "start": "2026-10-24T11:23:35+08:00",
+        "lines": 515,
+        "kicked": 0,
+        "net_err_1006514": 0,
+        "login_invalid": 0,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-24_12-56-48.072.log",
+        "size": 691523,
+        "start": "2026-10-24T12:56:48+08:00",
+        "lines": 470,
+        "kicked": 0,
+        "net_err_1006514": 0,
+        "login_invalid": 0,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 1
+      },
+      {
+        "file": "2026-10-24_16-34-05.577.log",
+        "size": 1205137,
+        "start": "2026-10-24T16:34:05+08:00",
+        "lines": 929,
+        "kicked": 0,
+        "net_err_1006514": 14,
+        "login_invalid": 0,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 0
+      },
+      {
+        "file": "2026-10-24_21-41-59.947.log",
+        "size": 58426,
+        "start": "2026-10-24T21:41:59+08:00",
+        "lines": 122,
+        "kicked": 0,
+        "net_err_1006514": 0,
+        "login_invalid": 0,
+        "qr_lines": 0,
+        "quick_login_lines": 0,
+        "quick_login_failed": 0,
+        "offline_lines": 0
+      }
+    ],
+    "kicked_offline": [
+      {
+        "ts": "2026-10-18T09:48:29+08:00",
+        "text": "10-18 09:48:29 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-18T10:22:50+08:00",
+        "text": "10-18 10:22:50 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-18T12:45:46+08:00",
+        "text": "10-18 12:45:46 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-18T15:36:29+08:00",
+        "text": "10-18 15:36:29 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-18T17:50:47+08:00",
+        "text": "10-18 17:50:47 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-18T21:31:02+08:00",
+        "text": "10-18 21:31:02 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-18T21:33:44+08:00",
+        "text": "10-18 21:33:44 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-19T10:31:47+08:00",
+        "text": "10-19 10:31:47 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-19T12:39:30+08:00",
+        "text": "10-19 12:39:30 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-19T15:10:02+08:00",
+        "text": "10-19 15:10:02 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-19T18:34:19+08:00",
+        "text": "10-19 18:34:19 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-19T18:39:29+08:00",
+        "text": "10-19 18:39:29 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-20T18:52:50+08:00",
+        "text": "10-20 18:52:50 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-20T19:10:55+08:00",
+        "text": "10-20 19:10:55 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-20T19:19:24+08:00",
+        "text": "10-20 19:19:24 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-20T19:23:34+08:00",
+        "text": "10-20 19:23:34 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-20T19:36:24+08:00",
+        "text": "10-20 19:36:24 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-20T19:54:59+08:00",
+        "text": "10-20 19:54:59 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-20T20:08:46+08:00",
+        "text": "10-20 20:08:46 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-20T20:32:52+08:00",
+        "text": "10-20 20:32:52 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-21T08:41:42+08:00",
+        "text": "10-21 08:41:42 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-21T10:43:21+08:00",
+        "text": "10-21 10:43:21 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-21T10:50:23+08:00",
+        "text": "10-21 10:50:23 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-21T13:39:06+08:00",
+        "text": "10-21 13:39:06 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-21T21:14:37+08:00",
+        "text": "10-21 21:14:37 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-22T09:44:33+08:00",
+        "text": "10-22 09:44:33 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-22T12:40:37+08:00",
+        "text": "10-22 12:40:37 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-22T14:58:05+08:00",
+        "text": "10-22 14:58:05 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-22T21:45:39+08:00",
+        "text": "10-22 21:45:39 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-23T11:05:20+08:00",
+        "text": "10-23 11:05:20 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-23T12:46:04+08:00",
+        "text": "10-23 12:46:04 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-24T09:47:20+08:00",
+        "text": "10-24 09:47:20 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      }
+    ],
+    "network_error_1006514": 20,
+    "login_invalid_lines": [
+      {
+        "ts": "2026-10-18T09:48:29+08:00",
+        "text": "10-18 09:48:29 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-18T10:22:50+08:00",
+        "text": "10-18 10:22:50 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-18T12:45:46+08:00",
+        "text": "10-18 12:45:46 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-18T15:36:29+08:00",
+        "text": "10-18 15:36:29 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-18T17:50:47+08:00",
+        "text": "10-18 17:50:47 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-18T21:31:02+08:00",
+        "text": "10-18 21:31:02 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-18T21:33:44+08:00",
+        "text": "10-18 21:33:44 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-19T10:31:47+08:00",
+        "text": "10-19 10:31:47 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-19T12:39:30+08:00",
+        "text": "10-19 12:39:30 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-19T15:10:02+08:00",
+        "text": "10-19 15:10:02 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-19T18:34:19+08:00",
+        "text": "10-19 18:34:19 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-19T18:39:29+08:00",
+        "text": "10-19 18:39:29 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-20T18:52:50+08:00",
+        "text": "10-20 18:52:50 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-20T19:10:55+08:00",
+        "text": "10-20 19:10:55 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-20T19:19:24+08:00",
+        "text": "10-20 19:19:24 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-20T19:23:34+08:00",
+        "text": "10-20 19:23:34 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-20T19:36:24+08:00",
+        "text": "10-20 19:36:24 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-20T19:54:59+08:00",
+        "text": "10-20 19:54:59 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-20T20:08:46+08:00",
+        "text": "10-20 20:08:46 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-20T20:32:52+08:00",
+        "text": "10-20 20:32:52 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-21T08:41:42+08:00",
+        "text": "10-21 08:41:42 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-21T10:43:21+08:00",
+        "text": "10-21 10:43:21 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-21T10:50:23+08:00",
+        "text": "10-21 10:50:23 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-21T13:39:06+08:00",
+        "text": "10-21 13:39:06 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-21T21:14:37+08:00",
+        "text": "10-21 21:14:37 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-22T09:44:33+08:00",
+        "text": "10-22 09:44:33 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-22T12:40:37+08:00",
+        "text": "10-22 12:40:37 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-22T14:58:05+08:00",
+        "text": "10-22 14:58:05 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-22T21:45:39+08:00",
+        "text": "10-22 21:45:39 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-23T11:05:20+08:00",
+        "text": "10-23 11:05:20 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-23T12:46:04+08:00",
+        "text": "10-23 12:46:04 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      },
+      {
+        "ts": "2026-10-24T09:47:20+08:00",
+        "text": "10-24 09:47:20 [error] ㅤ | [KickedOffLine] [下线通知] 你的账号当前登录已失效，请重新登录。"
+      }
+    ],
+    "qr_lines": 4,
+    "quick_login_lines": 0,
+    "quick_login_failed_lines": 0,
+    "account_offline_lines": 56,
+    "kicked_by_day": {
+      "2026-10-18": 7,
+      "2026-10-19": 5,
+      "2026-10-20": 8,
+      "2026-10-21": 5,
+      "2026-10-22": 4,
+      "2026-10-23": 2,
+      "2026-10-24": 1
+    }
+  },
+  "bots": {
+    "reverse": {
+      "files": [
+        {
+          "file": "bot.2026-10-18.log",
+          "size": 307769,
+          "connects": 9,
+          "disconnects": 8
+        },
+        {
+          "file": "bot.2026-10-19.log",
+          "size": 395514,
+          "connects": 9,
+          "disconnects": 9
+        },
+        {
+          "file": "bot.2026-10-20.log",
+          "size": 345226,
+          "connects": 15,
+          "disconnects": 14
+        },
+        {
+          "file": "bot.2026-10-21.log",
+          "size": 249372,
+          "connects": 12,
+          "disconnects": 11
+        },
+        {
+          "file": "bot.2026-10-22.log",
+          "size": 379691,
+          "connects": 17,
+          "disconnects": 17
+        },
+        {
+          "file": "bot.2026-10-24.log",
+          "size": 3536,
+          "connects": 1,
+          "disconnects": 0
+        }
+      ],
+      "connects": 63,
+      "disconnects": 59,
+      "zombie": 59,
+      "recoveries": [
+        {
+          "file": "bot.2026-10-18.log",
+          "seconds": 36.0
+        },
+        {
+          "file": "bot.2026-10-18.log",
+          "seconds": 108.0
+        },
+        {
+          "file": "bot.2026-10-18.log",
+          "seconds": 102.0
+        },
+        {
+          "file": "bot.2026-10-18.log",
+          "seconds": 42.0
+        },
+        {
+          "file": "bot.2026-10-18.log",
+          "seconds": 3738.0
+        },
+        {
+          "file": "bot.2026-10-18.log",
+          "seconds": 108.0
+        },
+        {
+          "file": "bot.2026-10-18.log",
+          "seconds": 5892.0
+        },
+        {
+          "file": "bot.2026-10-18.log",
+          "seconds": 114.0
+        },
+        {
+          "file": "bot.2026-10-18.log",
+          "seconds": 102.0
+        },
+        {
+          "file": "bot.2026-10-19.log",
+          "seconds": 24.0
+        },
+        {
+          "file": "bot.2026-10-19.log",
+          "seconds": 24.0
+        },
+        {
+          "file": "bot.2026-10-19.log",
+          "seconds": 216.0
+        },
+        {
+          "file": "bot.2026-10-19.log",
+          "seconds": 12.0
+        },
+        {
+          "file": "bot.2026-10-19.log",
+          "seconds": 108.0
+        },
+        {
+          "file": "bot.2026-10-19.log",
+          "seconds": 18.0
+        },
+        {
+          "file": "bot.2026-10-19.log",
+          "seconds": 5628.0
+        },
+        {
+          "file": "bot.2026-10-19.log",
+          "seconds": 108.0
+        },
+        {
+          "file": "bot.2026-10-19.log",
+          "seconds": 108.0
+        },
+        {
+          "file": "bot.2026-10-20.log",
+          "seconds": 42.0
+        },
+        {
+          "file": "bot.2026-10-20.log",
+          "seconds": 30.0
+        },
+        {
+          "file": "bot.2026-10-20.log",
+          "seconds": 18.0
+        },
+        {
+          "file": "bot.2026-10-20.log",
+          "seconds": 18.0
+        },
+        {
+          "file": "bot.2026-10-20.log",
+          "seconds": 12.0
+        },
+        {
+          "file": "bot.2026-10-20.log",
+          "seconds": 48.0
+        },
+        {
+          "file": "bot.2026-10-20.log",
+          "seconds": 420.0
+        },
+        {
+          "file": "bot.2026-10-20.log",
+          "seconds": 138.0
+        },
+        {
+          "file": "bot.2026-10-20.log",
+          "seconds": 48.0
+        },
+        {
+          "file": "bot.2026-10-20.log",
+          "seconds": 582.0
+        },
+        {
+          "file": "bot.2026-10-20.log",
+          "seconds": 108.0
+        },
+        {
+          "file": "bot.2026-10-20.log",
+          "seconds": 30.0
+        },
+        {
+          "file": "bot.2026-10-20.log",
+          "seconds": 24.0
+        },
+        {
+          "file": "bot.2026-10-20.log",
+          "seconds": 24.0
+        },
+        {
+          "file": "bot.2026-10-20.log",
+          "seconds": 24.0
+        },
+        {
+          "file": "bot.2026-10-21.log",
+          "seconds": 30.0
+        },
+        {
+          "file": "bot.2026-10-21.log",
+          "seconds": 780.0
+        },
+        {
+          "file": "bot.2026-10-21.log",
+          "seconds": 30.0
+        },
+        {
+          "file": "bot.2026-10-21.log",
+          "seconds": 30.0
+        },
+        {
+          "file": "bot.2026-10-21.log",
+          "seconds": 24.0
+        },
+        {
+          "file": "bot.2026-10-21.log",
+          "seconds": 36.0
+        },
+        {
+          "file": "bot.2026-10-21.log",
+          "seconds": 24.0
+        },
+        {
+          "file": "bot.2026-10-21.log",
+          "seconds": 24.0
+        },
+        {
+          "file": "bot.2026-10-21.log",
+          "seconds": 18.0
+        },
+        {
+          "file": "bot.2026-10-21.log",
+          "seconds": 810.0
+        },
+        {
+          "file": "bot.2026-10-21.log",
+          "seconds": 8838.0
+        },
+        {
+          "file": "bot.2026-10-21.log",
+          "seconds": 912.0
+        },
+        {
+          "file": "bot.2026-10-22.log",
+          "seconds": 24.0
+        },
+        {
+          "file": "bot.2026-10-22.log",
+          "seconds": 3438.0
+        },
+        {
+          "file": "bot.2026-10-22.log",
+          "seconds": 12.0
+        },
+        {
+          "file": "bot.2026-10-22.log",
+          "seconds": 4806.0
+        },
+        {
+          "file": "bot.2026-10-22.log",
+          "seconds": 1272.0
+        },
+        {
+          "file": "bot.2026-10-22.log",
+          "seconds": 8040.0
+        },
+        {
+          "file": "bot.2026-10-22.log",
+          "seconds": 39678.0
+        },
+        {
+          "file": "bot.2026-10-22.log",
+          "seconds": 24.0
+        },
+        {
+          "file": "bot.2026-10-22.log",
+          "seconds": 138.0
+        },
+        {
+          "file": "bot.2026-10-22.log",
+          "seconds": 24.0
+        },
+        {
+          "file": "bot.2026-10-22.log",
+          "seconds": 2982.0
+        },
+        {
+          "file": "bot.2026-10-22.log",
+          "seconds": 30.0
+        },
+        {
+          "file": "bot.2026-10-22.log",
+          "seconds": 24.0
+        },
+        {
+          "file": "bot.2026-10-22.log",
+          "seconds": 18.0
+        },
+        {
+          "file": "bot.2026-10-22.log",
+          "seconds": 5778.0
+        },
+        {
+          "file": "bot.2026-10-22.log",
+          "seconds": 12.0
+        },
+        {
+          "file": "bot.2026-10-22.log",
+          "seconds": 5064.0
+        },
+        {
+          "file": "bot.2026-10-24.log",
+          "seconds": 6.0
+        }
+      ]
+    },
+    "private": {
+      "files": [
+        {
+          "file": "private_bot.2026-10-20.log",
+          "size": 25166,
+          "connects": 40,
+          "disconnects": 31
+        },
+        {
+          "file": "private_bot.2026-10-21.log",
+          "size": 19162,
+          "connects": 24,
+          "disconnects": 22
+        },
+        {
+          "file": "private_bot.2026-10-22.log",
+          "size": 26417,
+          "connects": 30,
+          "disconnects": 29
+        },
+        {
+          "file": "private_bot.2026-10-24.log",
+          "size": 10259,
+          "connects": 8,
+          "disconnects": 5
+        }
+      ],
+      "connects": 102,
+      "disconnects": 87,
+      "zombie": 0,
+      "recoveries": [],
+      "retcode_1200": 7
+    }
+  },
+  "downtime_samples_s": [
+    36.0,
+    108.0,
+    102.0,
+    42.0,
+    3738.0,
+    108.0,
+    5892.0,
+    114.0,
+    102.0,
+    24.0,
+    24.0,
+    216.0,
+    12.0,
+    108.0,
+    18.0,
+    5628.0,
+    108.0,
+    108.0,
+    42.0,
+    30.0,
+    18.0,
+    18.0,
+    12.0,
+    48.0,
+    420.0,
+    138.0,
+    48.0,
+    582.0,
+    108.0,
+    30.0,
+    24.0,
+    24.0,
+    24.0,
+    30.0,
+    780.0,
+    30.0,
+    30.0,
+    24.0,
+    36.0,
+    24.0,
+    24.0,
+    18.0,
+    810.0,
+    8838.0,
+    912.0,
+    24.0,
+    3438.0,
+    12.0,
+    4806.0,
+    1272.0,
+    8040.0,
+    39678.0,
+    24.0,
+    138.0,
+    24.0,
+    2982.0,
+    30.0,
+    24.0,
+    18.0,
+    5778.0,
+    12.0,
+    5064.0,
+    6.0
+  ],
+  "unknowns": [],
+  "downtime_buckets": {
+    "lt60": {
+      "n": 34,
+      "median_s": 24.0
+    },
+    "60_to_600": {
+      "n": 14
+    },
+    "gt600": {
+      "n": 15,
+      "max_min": 661.3
+    }
+  }
+}

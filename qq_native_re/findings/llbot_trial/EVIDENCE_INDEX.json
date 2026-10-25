@@ -1,0 +1,280 @@
+{
+  "generated_at": "2026-10-24T21:59:06+08:00",
+  "root": "E:\\QQbot\\qq_native_re\\findings\\llbot_trial",
+  "notes": [
+    "sensitive=true 的文件可能含群聊原文/图片直链/崩溃转储/消息 ID 等，仅存本机，禁止外发或贴进报告。",
+    "REPORT.md / TEST_MATRIX.md / manifest.json 均不含密码、AccessToken、登录凭据或完整私聊内容。"
+  ],
+  "files": [
+    {
+      "path": "REPORT.md",
+      "bytes": 15122,
+      "sha256": "9f309d56420f656164b8f909c4e91daea794e804b2d92060e61662a38cb48500",
+      "sensitive": false
+    },
+    {
+      "path": "ROLLBACK.md",
+      "bytes": 10099,
+      "sha256": "9645c56df80b5a9ce052306ab53a790f4d1cbd9e10f98b5f7ae9e6f2ebf63d67",
+      "sensitive": false
+    },
+    {
+      "path": "TEST_MATRIX.md",
+      "bytes": 12158,
+      "sha256": "fad9d60a215d70d6d58036b61b842035aacf7fda61a782d5742e857799cf9a17",
+      "sensitive": false
+    },
+    {
+      "path": "baseline/BASELINE.md",
+      "bytes": 3519,
+      "sha256": "40d121377140c172f49d72a28017d5569b0869ed2799a6a999ac9844ea592798",
+      "sensitive": false
+    },
+    {
+      "path": "baseline/baseline.json",
+      "bytes": 44615,
+      "sha256": "9c9c36129da7462b5eaaf41869be3f5b629f94225e91f0c072751938bdc3109b",
+      "sensitive": false
+    },
+    {
+      "path": "logs/copy_adaptation.json",
+      "bytes": 2563,
+      "sha256": "12f21fe2c09816bc6346f99e650a85a644b48a234b7cc080ed285f9873c7ad75",
+      "sensitive": false
+    },
+    {
+      "path": "logs/stageA/evidence_actions.json",
+      "bytes": 15913,
+      "sha256": "8f7ab888521e2f8c358db08e2f9c405453176ef5274e3b1bcb68f6be901a905f",
+      "sensitive": true
+    },
+    {
+      "path": "logs/stageA/evidence_faults.json",
+      "bytes": 1004,
+      "sha256": "ad5d6b42cf53c00d80abf18cd13a3f8ee28cffafd20ed72f521b0b1613da3767",
+      "sensitive": true
+    },
+    {
+      "path": "logs/stageA/observer/events.jsonl",
+      "bytes": 63770,
+      "sha256": "8309a71b5b4d599e27a9d3f36c8a097b0d06776567c0ec55e05413a39c83e75b",
+      "sensitive": true
+    },
+    {
+      "path": "logs/stageA/observer/images.jsonl",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sensitive": false
+    },
+    {
+      "path": "logs/stageA/observer/results.jsonl",
+      "bytes": 601,
+      "sha256": "90796522544fabd5ae1bb455552de42f70bdcafb033ede214c9be37755ce9c1e",
+      "sensitive": true
+    },
+    {
+      "path": "logs/stageA/probe/events.jsonl",
+      "bytes": 79890,
+      "sha256": "734b639e146753309c982e423b6a00e83bd30a42c984a7cab716c741e7bc8d13",
+      "sensitive": true
+    },
+    {
+      "path": "logs/stageA/probe/images.jsonl",
+      "bytes": 360,
+      "sha256": "2dfdb98eafc088bad3eb5598a7616550c300b720fe7f20a038acdd12d0797e04",
+      "sensitive": false
+    },
+    {
+      "path": "logs/stageA/probe/results.jsonl",
+      "bytes": 224727,
+      "sha256": "951f27ff1662fe577bcfcdee8c1e58be8db5cabbcb29b9202f2c07f51dc64593",
+      "sensitive": true
+    },
+    {
+      "path": "logs/stageA/qq_crash_4213eee1.dmp",
+      "bytes": 5202608,
+      "sha256": "ee5b0b8cb7108b268c0c2009ae3a4fb11a610161baceba0de5873a4a3d840de3",
+      "sensitive": true
+    },
+    {
+      "path": "logs/stageA/qq_crash_4213eee1.txt",
+      "bytes": 427,
+      "sha256": "e660f2d0affd274f488f8867d8e6811577dae4d62a8d3bbec7e3d786bf6b891b",
+      "sensitive": true
+    },
+    {
+      "path": "logs/stageA/qq_crash_dialog_wrapper_node.png",
+      "bytes": 63303,
+      "sha256": "f7a1814962c4640b7db2baaf16830f1c03e8aff6f28059b76ac7941d03e07c6a",
+      "sensitive": true
+    },
+    {
+      "path": "logs/stageB/evidence_actions_B.json",
+      "bytes": 7405,
+      "sha256": "58ef64a32eb912a97726cf1b6edb0cabe15291e3147e80c4f6cf4aff54022157",
+      "sensitive": true
+    },
+    {
+      "path": "logs/stageB/login_qrcode.png",
+      "bytes": 596,
+      "sha256": "18ce17c210686bdd235bee52229e60b414d1c4dd23b49120852ddfd9e7a15146",
+      "sensitive": false
+    },
+    {
+      "path": "logs/stageB/observer/events.jsonl",
+      "bytes": 19303,
+      "sha256": "15bf116512ebee2b85030ceccd1925422c38def6565db7d818564e293b27f629",
+      "sensitive": true
+    },
+    {
+      "path": "logs/stageB/observer/images.jsonl",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sensitive": false
+    },
+    {
+      "path": "logs/stageB/observer/results.jsonl",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sensitive": true
+    },
+    {
+      "path": "logs/stageB/probe/events.jsonl",
+      "bytes": 43682,
+      "sha256": "9a8da048541a2dec098fda2cfd93ba04a7d08deb99074ac5700d8b1bc237e5a6",
+      "sensitive": true
+    },
+    {
+      "path": "logs/stageB/probe/images.jsonl",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sensitive": false
+    },
+    {
+      "path": "logs/stageB/probe/results.jsonl",
+      "bytes": 149914,
+      "sha256": "a5b0b06dd5014ff12454bac4cf2517faec836a575b5072770ec88922f29ecac5",
+      "sensitive": true
+    },
+    {
+      "path": "manifest.json",
+      "bytes": 34658,
+      "sha256": "6bf95775fda1bc595a198589560784f55df3438242d2f7607453dcb35f907451",
+      "sensitive": false
+    },
+    {
+      "path": "scripts/add_observer_channel.py",
+      "bytes": 1501,
+      "sha256": "f485985e5ec1a06aac9dcd1881882ca6ad539fd63fe24f664ea84d0870cb9f61",
+      "sensitive": true
+    },
+    {
+      "path": "scripts/baseline_extract.py",
+      "bytes": 9271,
+      "sha256": "347cfd72654dc09147203df3cc6bdf28544d91a107a20a6ccfe820cae43341db",
+      "sensitive": false
+    },
+    {
+      "path": "scripts/compare_channels.py",
+      "bytes": 1244,
+      "sha256": "058ca6bfe58a19d42d011cb4b8f0eae88a568a7243ab8dc5ce50112970fd9d02",
+      "sensitive": false
+    },
+    {
+      "path": "scripts/fetch_llbot.py",
+      "bytes": 4133,
+      "sha256": "a9fda721db4c9914cb52ba3cbc333877acac2be50c9cd597d9243eec81e07047",
+      "sensitive": false
+    },
+    {
+      "path": "scripts/inspect_llbot_zip.py",
+      "bytes": 823,
+      "sha256": "7d0f7924ffd825f8b4719bf714edcedc092b32675e06fbb40a1b185e0fb09aa4",
+      "sensitive": false
+    },
+    {
+      "path": "scripts/make_evidence_index.py",
+      "bytes": 2358,
+      "sha256": "57eef97245efbe82494fac6e7c677106ecace4e9d276a2170bee4cf57afc0695",
+      "sensitive": true
+    },
+    {
+      "path": "scripts/patch_copy_at_detection.py",
+      "bytes": 2966,
+      "sha256": "ee169b0ea0efcd6a70ea65cb8266cbae94b4c73ada5f5dad5cb1606a055e686c",
+      "sensitive": false
+    },
+    {
+      "path": "scripts/preflight_backup.ps1",
+      "bytes": 5730,
+      "sha256": "44065f709e01e6519579d9918c3b3e5097d2d4fb328c1e0cb6aa508e26be9029",
+      "sensitive": false
+    },
+    {
+      "path": "scripts/prepare_test_copy.py",
+      "bytes": 3872,
+      "sha256": "ca9c000a522026a879748d2fbd8f2b832f2b38ff981672e88f633b1256af37d3",
+      "sensitive": false
+    },
+    {
+      "path": "scripts/probe_client.py",
+      "bytes": 2045,
+      "sha256": "0ee40d7f39cc1992781188bd793e8d9300bec8aa9a68199968b9fbb259dcf5d3",
+      "sensitive": true
+    },
+    {
+      "path": "scripts/selftest_probe.py",
+      "bytes": 6638,
+      "sha256": "442c6612a873c2c0b4ca7b6a8c2c75820c8598a8c01af5da2d17506a2b698f84",
+      "sensitive": true
+    },
+    {
+      "path": "scripts/stageA_driver.py",
+      "bytes": 10166,
+      "sha256": "3273620d2a7657d7e3801c29ba6d2c0ac001e7687ecf4c4e98fe927f2c810e2b",
+      "sensitive": false
+    },
+    {
+      "path": "scripts/stageA_faults.py",
+      "bytes": 5435,
+      "sha256": "2c70c7ee3e87ef7255101cc4e0432df8c72486c499f033d5a571e7a314622af3",
+      "sensitive": false
+    },
+    {
+      "path": "scripts/stageB_driver.py",
+      "bytes": 6576,
+      "sha256": "56a61c1d9dd5907fdba63cef0fe7cdb9317aadfd2bb040e09d54acf90d5922b1",
+      "sensitive": false
+    },
+    {
+      "path": "scripts/strings_probe.py",
+      "bytes": 1643,
+      "sha256": "1f2ce8364865d21eb61bff02a171ea7de26c32d50f27b8d5da5cb021fec48cfa",
+      "sensitive": true
+    },
+    {
+      "path": "scripts/ws_probe.py",
+      "bytes": 23966,
+      "sha256": "cecdcf15db816f3a2f060c8c33f70babd9715a2cb49cc25187c679ca89d56192",
+      "sensitive": true
+    },
+    {
+      "path": "state/FINAL_STATE.json",
+      "bytes": 1255,
+      "sha256": "8734e6d82a9396041c6b28a4b3f50fe875db251a418089982026aec020d18667",
+      "sensitive": false
+    },
+    {
+      "path": "state/PREFLIGHT_STATE.md",
+      "bytes": 6796,
+      "sha256": "c9d496bc9510eeb77b0f100b3dc063fb53199f7c6070f703f00f72d7d74ab177",
+      "sensitive": false
+    },
+    {
+      "path": "state/trial_timeline.json",
+      "bytes": 2468,
+      "sha256": "76d582fde3c63a059b5c37be67cefaf543c1fe4574b8cb6662c2e150b5e69314",
+      "sensitive": false
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "trial": "llbot_trial",
+  "date": "2026-10-24",
+  "stage_a": {
+    "llbot_version": "8.3.2",
+    "qq_version": "9.9.36-53644",
+    "mode": "PMHQ (headful, debugger proxy)",
+    "launch_cmd": "LuckyLillia.exe --qq=2668851638 --work-dir=E:\\QQbot-trials\\qq_workdir",
+    "first_login": {
+      "launch_at": "2026-10-24T20:38:44+08:00",
+      "login_success_at": "2026-10-24T20:39:21+08:00",
+      "method": "manual QR scan (user confirmed)",
+      "manual_scan_count": 1
+    },
+    "restart_1": {
+      "stopped_at": "2026-10-24T21:04:43+08:00",
+      "relaunch_at": "2026-10-24T21:04:43+08:00",
+      "login_success_after_seconds": 22,
+      "method": "quick login (no QR)",
+      "note": "启动过程中出现 QQ 错误弹窗 + 登录界面，随后自动登录成功"
+    },
+    "crash_report": {
+      "time": "2026-10-24T21:27:10+08:00",
+      "module": "wrapper.node",
+      "qq_path": "E:\\Program Files\\Tencent\\QQNT\\versions\\9.9.36-53644\\resources\\app\\wrapper.node",
+      "crashpad_id": "4213eee1-5f47-462e-a1b0-ee74db36a74f",
+      "attribution": "与试验中强制 Stop-Process 结束试验 QQ 进程树的时间点重合，无法排除是强制终止诱发的崩溃；需长期观察确认是否偶发",
+      "evidence": "logs/stageA/qq_crash_dialog_wrapper_node.png, logs/stageA/qq_crash_4213eee1.txt, logs/stageA/qq_crash_4213eee1.dmp"
+    },
+    "stopped_for_stage_b_at": "2026-10-24T21:26:50+08:00"
+  },
+  "stage_b": {
+    "mode": "headless (direct protocol)",
+    "protocol": "linux (default)",
+    "launch_cmd": "LuckyLillia.exe --headless --qq=2668851638",
+    "first_login": {
+      "launch_at": "2026-10-24T21:28:57+08:00",
+      "qr_saved_at": "2026-10-24T21:29:00+08:00",
+      "login_success_at": "2026-10-24T21:30:38+08:00",
+      "method": "manual QR scan",
+      "manual_scan_count": 1,
+      "user_choice": "下次登录无需手机确认（手机端选择）",
+      "client_label": "linux 版本（QQ 侧显示）"
+    },
+    "restart_1": {
+      "stopped_at": "2026-10-24T21:35:49+08:00",
+      "login_success_after_seconds": 4,
+      "method": "session file quick login (qq-session-2668851638.json), no QR",
+      "qq_client_processes": 0
+    }
+  },
+  "isolation": {
+    "llbot_data_dir": "E:\\QQbot-trials\\llbot\\bin\\llbot\\data",
+    "onebot_reverse_ws": ["ws://127.0.0.1:18080", "ws://127.0.0.1:18081", "ws://127.0.0.1:18082"],
+    "production_ports_touched": false,
+    "production_data_private_touched": false
+  }
+}

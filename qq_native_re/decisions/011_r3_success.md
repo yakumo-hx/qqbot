@@ -4,6 +4,9 @@
 > 决策者：PM（用户拍板：4.18.38 + 影子暂存/受控替换/全备份）
 > 状态：**R3 完成**；QQ 运行时基线**零改动**；bypass 仍 SUCCESS
 > 依据：用户终端实录 + PM 读盘核实
+>
+> ⚠️ **2026-10-13 15:23 路径变更（后补，正文不改）**：本机运维脚本 `check_bypass_log.bat/.ps1`、`start_napcat_verbose.bat` 已由另一条工作流的仓库重组从仓库根移入 **`tools\`**（PM 裁决：**留在 `tools\`，不回移**）。
+> §二.4 与 §五 提到的脚本名请按 `E:\QQbot\tools\...` 定位；详见文末「**六、路径变更记录（2026-10-13）**」。
 
 ## 一、验证清单（逐项实测）
 
@@ -40,3 +43,21 @@
 - 观察 R3 效果：下一个掉线事件是否**自动恢复**（本路线核心判据）。
 - 并行备选：**D1**（amgom 遥测常数）—— 需修改 NapCat 自身 JS，侵入性最大，待 R3 效果明朗后再定。
 - 卫生项：`start_napcat_verbose.bat` 的中文行在 cmd（OEM 936）下被误解析（不影响功能），已改纯 ASCII。
+
+---
+
+## 六、路径变更记录（2026-10-13）
+
+> 本节为**追加**内容；§一–§五原文一字未改（判决日志按「只追加」纪律处理）。
+
+- **事实**：2026-10-13 15:23:48，另一条工作流的仓库重组把 `start_napcat_verbose.bat`、`check_bypass_log.bat`、`check_bypass_log.ps1` 从仓库根移入 **`tools\`**；`tools/` 由 `.gitignore:97` 忽略，`README.md:162` 已登记「本机运维脚本（NapCat verbose 启动、bypass 取证），不入库」。
+- **PM 裁决**：**留在 `tools\`，不回移**（回移会产生两份漂移，并与该重组冲突）。运行不受影响：脚本只用绝对路径且启动前 `cd /d`；新路径 dry-run 实测 `exit=0`、零 `is not recognized`。
+- **对本文的影响（2 处，原文均为裸文件名、未写旧路径，故正文不改，仅在此对号入座）**：
+
+  | 位置 | 原文 | 现应读作 |
+  |---|---|---|
+  | §二.4 回滚警告 | 「回滚前先双击 `check_bypass_log.bat` 留档」 | 双击 `E:\QQbot\tools\check_bypass_log.bat` |
+  | §五 卫生项 | 「`start_napcat_verbose.bat` 的中文行在 cmd（OEM 936）下被误解析」 | `E:\QQbot\tools\start_napcat_verbose.bat` |
+
+- **新路径清单**：`E:\QQbot\tools\start_napcat_verbose.bat`（8,646 B）、`E:\QQbot\tools\check_bypass_log.bat`（2,059 B）、`E:\QQbot\tools\check_bypass_log.ps1`（14,613 B）。
+- 未修改脚本本体，未触碰 `tools/**`、`README.md`、`.gitignore`、任何 `.py`/配置/运行时文件。

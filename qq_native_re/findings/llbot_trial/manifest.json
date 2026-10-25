@@ -1,0 +1,703 @@
+{
+  "trial": "llbot_trial",
+  "generated_at": "2026-10-24T19:40:32.0988235+08:00",
+  "backup_dir": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032",
+  "backup_entries": [
+    {
+      "original_path": "E:\\QQbot\\config\\active_character.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\config\\active_character.json",
+      "sha256": "985C2298148121274686CE3AA1A6322797355A875DA94BBAE617EC9A62A0A4C8",
+      "size_bytes": 93,
+      "last_write": "2026-10-12T09:32:34.0664564+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": false,
+      "note": "production config/"
+    },
+    {
+      "original_path": "E:\\QQbot\\config\\active_model.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\config\\active_model.json",
+      "sha256": "267CB5F413EA57A83BF6AA384621640560B5B16E5316574F425E7597F13F2094",
+      "size_bytes": 32,
+      "last_write": "2026-10-12T07:58:10.3193051+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": false,
+      "note": "production config/"
+    },
+    {
+      "original_path": "E:\\QQbot\\config\\auto_restart.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\config\\auto_restart.json",
+      "sha256": "64FAD9DE911A6CDC08C5E83ED68173BC736E6567B6F0A34083EAB2B925A14EE4",
+      "size_bytes": 236,
+      "last_write": "2026-10-21T14:02:41.3367885+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": false,
+      "note": "production config/"
+    },
+    {
+      "original_path": "E:\\QQbot\\config\\decision_rules.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\config\\decision_rules.json",
+      "sha256": "AA9354A50565A1A88AE0EA410620839FC19299E9B94ACA6476EB4013D4B74D90",
+      "size_bytes": 1776,
+      "last_write": "2026-10-20T13:06:51.0861779+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": false,
+      "note": "production config/"
+    },
+    {
+      "original_path": "E:\\QQbot\\config\\group_characters.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\config\\group_characters.json",
+      "sha256": "8C9F90A162449834D91097B3E195E04CDD6D2E94A7BF3038D5B19CFB913E296F",
+      "size_bytes": 89,
+      "last_write": "2026-10-14T21:39:48.3193591+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": false,
+      "note": "production config/"
+    },
+    {
+      "original_path": "E:\\QQbot\\config\\group_features.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\config\\group_features.json",
+      "sha256": "A832E006AFE85A78B6F65BC1A180C6D472E622D8183C1A1BBD0051CA5BFDB27B",
+      "size_bytes": 1002,
+      "last_write": "2026-10-17T22:10:32.2551706+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": false,
+      "note": "production config/"
+    },
+    {
+      "original_path": "E:\\QQbot\\config\\interaction_menu.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\config\\interaction_menu.json",
+      "sha256": "392B39A8AD5DF91B57E7610D7F7B1009461AEBF1CFCDA5526DDAB85AA07FB34F",
+      "size_bytes": 541,
+      "last_write": "2026-10-13T13:00:11.6852076+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": false,
+      "note": "production config/"
+    },
+    {
+      "original_path": "E:\\QQbot\\config\\labels.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\config\\labels.json",
+      "sha256": "34E691AE9C86B04ED39EC43B0FDE2CD7B5795B26A36D55F79D03D4C9FEDA7D42",
+      "size_bytes": 139,
+      "last_write": "2026-06-15T13:34:02.4014531+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": false,
+      "note": "production config/"
+    },
+    {
+      "original_path": "E:\\QQbot\\config\\model_pool.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\config\\model_pool.json",
+      "sha256": "F8CB7537C931949B24030EB1B42603FDA85C17520A46D23764941EA8A6808697",
+      "size_bytes": 701,
+      "last_write": "2026-10-14T17:06:17.8566737+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": false,
+      "note": "production config/"
+    },
+    {
+      "original_path": "E:\\QQbot\\config\\persona.txt",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\config\\persona.txt",
+      "sha256": "4A305F9D226DCAE5146D1BE9233D29683BA43574738DBABAFD7C780AF2415D3F",
+      "size_bytes": 866,
+      "last_write": "2026-07-12T21:47:33.4662312+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": false,
+      "note": "production config/"
+    },
+    {
+      "original_path": "E:\\QQbot\\config\\private_chat.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\config\\private_chat.json",
+      "sha256": "33728ED4B50C797C64CF993B80B54633CF2A6BF3824F5E52218BBB84D250D50E",
+      "size_bytes": 3437,
+      "last_write": "2026-10-24T10:26:07.8065798+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": false,
+      "note": "production config/"
+    },
+    {
+      "original_path": "E:\\QQbot\\config\\reference.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\config\\reference.json",
+      "sha256": "115142F5B946B85A438370EAFCFE40FC896F01F10A55A4D4C873A0D51C5F968A",
+      "size_bytes": 1369,
+      "last_write": "2026-10-15T12:27:45.5059651+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": false,
+      "note": "production config/"
+    },
+    {
+      "original_path": "E:\\QQbot\\config\\search.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\config\\search.json",
+      "sha256": "3E142794847FFE12960811E3E9DBE20F7BA3DC390CF1E7CCD761BF0E79A03C9B",
+      "size_bytes": 362,
+      "last_write": "2026-10-13T08:37:10.3807243+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": false,
+      "note": "production config/"
+    },
+    {
+      "original_path": "E:\\QQbot\\config\\sticker_tags.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\config\\sticker_tags.json",
+      "sha256": "430B0CA4D08AB5EB2DCB1B57D215E7B1BE7FD239B277A8E49FF3F8EC979CB286",
+      "size_bytes": 3868,
+      "last_write": "2026-10-14T22:16:59.7827915+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": false,
+      "note": "production config/"
+    },
+    {
+      "original_path": "E:\\QQbot\\config\\stickers.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\config\\stickers.json",
+      "sha256": "FECFB6840F62BDF306A5995419B02AA7716C6C6D7D234ABDE95D12BB1BB5E3EC",
+      "size_bytes": 1498,
+      "last_write": "2026-10-15T08:48:27.0158405+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": false,
+      "note": "production config/"
+    },
+    {
+      "original_path": "E:\\QQbot\\config\\characters\\soyo nagasaki\\info.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\config\\characters\\soyo nagasaki\\info.json",
+      "sha256": "797E57863D14225680E5157518779C5EC194CF0CAB1D38F67E063D3E9CFB3924",
+      "size_bytes": 164,
+      "last_write": "2026-06-27T19:43:54.8144261+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": false,
+      "note": "production config/"
+    },
+    {
+      "original_path": "E:\\QQbot\\config\\characters\\soyo nagasaki\\persona.txt",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\config\\characters\\soyo nagasaki\\persona.txt",
+      "sha256": "63469F6913DEB31E145C97C69ECCEAC47D19D9D3AD5D85F2DEE951ED62B0C606",
+      "size_bytes": 1799,
+      "last_write": "2026-07-12T21:47:58.1308312+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": false,
+      "note": "production config/"
+    },
+    {
+      "original_path": "E:\\QQbot\\config\\characters\\soyo nagasaki\\memories\\character\\default.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\config\\characters\\soyo nagasaki\\memories\\character\\default.json",
+      "sha256": "EB42E6F37E2CD04B62E6833B89D3099D1432B88D0C74A995F7EC74D49F2AB243",
+      "size_bytes": 7888,
+      "last_write": "2026-07-12T21:47:01.3751392+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": false,
+      "note": "production config/"
+    },
+    {
+      "original_path": "E:\\QQbot\\config\\characters\\soyo nagasaki\\memories\\group\\755471390.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\config\\characters\\soyo nagasaki\\memories\\group\\755471390.json",
+      "sha256": "73C038FF704E9669DCF0A707A32E2076EA665327DE3D148F4289A0997BAAAA57",
+      "size_bytes": 22,
+      "last_write": "2026-10-12T09:47:12.5545721+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": false,
+      "note": "production config/"
+    },
+    {
+      "original_path": "E:\\QQbot\\config\\characters\\soyo nagasaki.backup\\info.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\config\\characters\\soyo nagasaki.backup\\info.json",
+      "sha256": "797E57863D14225680E5157518779C5EC194CF0CAB1D38F67E063D3E9CFB3924",
+      "size_bytes": 164,
+      "last_write": "2026-06-27T19:43:54.8144261+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": false,
+      "note": "production config/"
+    },
+    {
+      "original_path": "E:\\QQbot\\config\\characters\\soyo nagasaki.backup\\persona.txt",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\config\\characters\\soyo nagasaki.backup\\persona.txt",
+      "sha256": "9CA9A834EC4F363E09D23D408DFC32FAA97919F5E35164080F9C5C787BFFDEC1",
+      "size_bytes": 63,
+      "last_write": "2026-06-27T16:37:40.4314917+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": false,
+      "note": "production config/"
+    },
+    {
+      "original_path": "E:\\QQbot\\config\\characters\\soyo nagasaki.backup\\memories\\character\\default.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\config\\characters\\soyo nagasaki.backup\\memories\\character\\default.json",
+      "sha256": "0965891C6F568D99BB289DCBA1DD1D8F16CF6BA8CCD00E48BBF48305CE86BB18",
+      "size_bytes": 28036,
+      "last_write": "2026-07-05T10:55:56.4455805+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": false,
+      "note": "production config/"
+    },
+    {
+      "original_path": "E:\\QQbot\\config\\characters\\soyo nagasaki.backup\\memories\\group\\755471390.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\config\\characters\\soyo nagasaki.backup\\memories\\group\\755471390.json",
+      "sha256": "65D807C21C9F7CE5B67A245C7B032B34C5D190E483CB64AA2E3834E4F03FCD37",
+      "size_bytes": 138,
+      "last_write": "2026-07-05T11:06:26.8987136+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": false,
+      "note": "production config/"
+    },
+    {
+      "original_path": "E:\\QQbot\\config\\characters\\大肥鱼\\info.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\config\\characters\\大肥鱼\\info.json",
+      "sha256": "9B862B5B261A1AB8CF8185B975009E83A2A710A3ED7BC312C5038BE50770CAA8",
+      "size_bytes": 236,
+      "last_write": "2026-10-12T08:57:03.6301674+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": false,
+      "note": "production config/"
+    },
+    {
+      "original_path": "E:\\QQbot\\config\\characters\\大肥鱼\\persona.txt",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\config\\characters\\大肥鱼\\persona.txt",
+      "sha256": "962DF34E08C670262444FE6A14615A004C603E241766F0C4BEBF0134AF4747D8",
+      "size_bytes": 7894,
+      "last_write": "2026-10-12T13:17:18.1613688+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": false,
+      "note": "production config/"
+    },
+    {
+      "original_path": "E:\\QQbot\\config\\characters\\大肥鱼\\private_persona.txt",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\config\\characters\\大肥鱼\\private_persona.txt",
+      "sha256": "906CA20A5CFA6AF7199C22E0139649C3AFB355C58F46D0026A6A0B08A9655867",
+      "size_bytes": 259,
+      "last_write": "2026-10-20T10:32:30.3156837+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": false,
+      "note": "production config/"
+    },
+    {
+      "original_path": "E:\\QQbot\\config\\characters\\大肥鱼\\private\\corrections.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\config\\characters\\大肥鱼\\private\\corrections.json",
+      "sha256": "DA6FA0FB6DC64A3FAF1F81F830B8696CCF02B9C654135111429090FA240870F8",
+      "size_bytes": 34,
+      "last_write": "2026-10-20T10:01:12.2427323+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": false,
+      "note": "production config/"
+    },
+    {
+      "original_path": "E:\\QQbot\\config\\characters\\大肥鱼\\private\\identity.md",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\config\\characters\\大肥鱼\\private\\identity.md",
+      "sha256": "B7C3504A1A2C6265D2019065C4A1E59114FF5E999FCAB7DE44DFB98F4AF6A213",
+      "size_bytes": 1343,
+      "last_write": "2026-10-20T10:01:12.1932938+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": false,
+      "note": "production config/"
+    },
+    {
+      "original_path": "E:\\QQbot\\config\\characters\\大肥鱼\\private\\relationship.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\config\\characters\\大肥鱼\\private\\relationship.json",
+      "sha256": "687A15AA2D1A9E775A686255D4BD8E10C079B8382EDDBFC88508442D0FBD5EFF",
+      "size_bytes": 1250,
+      "last_write": "2026-10-20T10:01:12.2260858+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": false,
+      "note": "production config/"
+    },
+    {
+      "original_path": "E:\\QQbot\\config\\characters\\大肥鱼\\private\\voice.md",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\config\\characters\\大肥鱼\\private\\voice.md",
+      "sha256": "7DB3D5C5A1B10153287D24C60115A121E0DB3BFC9B3BDCC4038064F8B76442BD",
+      "size_bytes": 1774,
+      "last_write": "2026-10-20T10:01:12.2099225+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": false,
+      "note": "production config/"
+    },
+    {
+      "original_path": "E:\\QQbot\\config\\characters\\贴吧鱼\\info.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\config\\characters\\贴吧鱼\\info.json",
+      "sha256": "5952A3AD0A0F7E456CDCA219145D35D1193AADBD88D910DB195CC5C15B893F19",
+      "size_bytes": 240,
+      "last_write": "2026-10-12T08:57:13.6627835+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": false,
+      "note": "production config/"
+    },
+    {
+      "original_path": "E:\\QQbot\\config\\characters\\贴吧鱼\\persona.txt",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\config\\characters\\贴吧鱼\\persona.txt",
+      "sha256": "7F14EA6DB2C05B627B543400B2D9B528A00B431041490D88502B6943CCC07D9D",
+      "size_bytes": 7794,
+      "last_write": "2026-10-12T08:57:43.0839022+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": false,
+      "note": "production config/"
+    },
+    {
+      "original_path": "E:\\QQbot\\NapCat\\NapCat.44498.Shell\\versions\\9.9.26-44498\\resources\\app\\napcat\\config\\napcat_2668851638.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\napcat_config\\napcat_2668851638.json",
+      "sha256": "9C24A9976BF93A44DF5F45EE90542D1AA18C13EFF6609FF92D169ED913B77684",
+      "size_bytes": 327,
+      "last_write": "2026-10-10T13:15:47.4280266+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": true,
+      "note": "NapCat runtime config (contains tokens/passkey; never quote values)"
+    },
+    {
+      "original_path": "E:\\QQbot\\NapCat\\NapCat.44498.Shell\\versions\\9.9.26-44498\\resources\\app\\napcat\\config\\napcat_2668851638.json.bak",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\napcat_config\\napcat_2668851638.json.bak",
+      "sha256": "FE4F2F413B4AA5B7C31A25031C88CA7C4E127DA6DD57E96609CA80F3E42A1DDF",
+      "size_bytes": 334,
+      "last_write": "2026-07-07T10:29:36.5717930+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": true,
+      "note": "NapCat runtime config (contains tokens/passkey; never quote values)"
+    },
+    {
+      "original_path": "E:\\QQbot\\NapCat\\NapCat.44498.Shell\\versions\\9.9.26-44498\\resources\\app\\napcat\\config\\napcat_784427550.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\napcat_config\\napcat_784427550.json",
+      "sha256": "93DB39A82D55DF1A59115C18AC9E58AE66EFC46E3956381A727E78400D9F9323",
+      "size_bytes": 335,
+      "last_write": "2026-07-07T10:29:56.4351396+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": true,
+      "note": "NapCat runtime config (contains tokens/passkey; never quote values)"
+    },
+    {
+      "original_path": "E:\\QQbot\\NapCat\\NapCat.44498.Shell\\versions\\9.9.26-44498\\resources\\app\\napcat\\config\\napcat_784427550.json.bak",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\napcat_config\\napcat_784427550.json.bak",
+      "sha256": "FE4F2F413B4AA5B7C31A25031C88CA7C4E127DA6DD57E96609CA80F3E42A1DDF",
+      "size_bytes": 334,
+      "last_write": "2026-07-07T10:29:39.2116866+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": true,
+      "note": "NapCat runtime config (contains tokens/passkey; never quote values)"
+    },
+    {
+      "original_path": "E:\\QQbot\\NapCat\\NapCat.44498.Shell\\versions\\9.9.26-44498\\resources\\app\\napcat\\config\\napcat_protocol_2668851638.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\napcat_config\\napcat_protocol_2668851638.json",
+      "sha256": "0E30A7EEC55AF741899C911F1C674F21C702BFFF015310307D93A654D8ABA826",
+      "size_bytes": 282,
+      "last_write": "2026-06-06T12:07:50.7199332+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": true,
+      "note": "NapCat runtime config (contains tokens/passkey; never quote values)"
+    },
+    {
+      "original_path": "E:\\QQbot\\NapCat\\NapCat.44498.Shell\\versions\\9.9.26-44498\\resources\\app\\napcat\\config\\napcat_protocol_784427550.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\napcat_config\\napcat_protocol_784427550.json",
+      "sha256": "62F4D9EE57BC41BB172F8904B046C33B99659929BC300E5F5AFE2A27B408346E",
+      "size_bytes": 119,
+      "last_write": "2026-07-01T15:45:16.9503358+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": true,
+      "note": "NapCat runtime config (contains tokens/passkey; never quote values)"
+    },
+    {
+      "original_path": "E:\\QQbot\\NapCat\\NapCat.44498.Shell\\versions\\9.9.26-44498\\resources\\app\\napcat\\config\\napcat.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\napcat_config\\napcat.json",
+      "sha256": "3AD3B17BBDCDFEEC44A3AECD083EC8648695825FBFDCB46BAF981FE9190C0854",
+      "size_bytes": 303,
+      "last_write": "2026-10-10T13:15:47.2830634+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": true,
+      "note": "NapCat runtime config (contains tokens/passkey; never quote values)"
+    },
+    {
+      "original_path": "E:\\QQbot\\NapCat\\NapCat.44498.Shell\\versions\\9.9.26-44498\\resources\\app\\napcat\\config\\onebot11_2668851638.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\napcat_config\\onebot11_2668851638.json",
+      "sha256": "1D19A482B6209B3402FDC39AECA8AA4CA3183754F324BC6F4E46DDA5B2795F0D",
+      "size_bytes": 1107,
+      "last_write": "2026-10-20T07:08:37.2868410+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": true,
+      "note": "NapCat runtime config (contains tokens/passkey; never quote values)"
+    },
+    {
+      "original_path": "E:\\QQbot\\NapCat\\NapCat.44498.Shell\\versions\\9.9.26-44498\\resources\\app\\napcat\\config\\onebot11_784427550.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\napcat_config\\onebot11_784427550.json",
+      "sha256": "3A7E80B0C0114E4ECA822516600A40AF83BDA32C38CF407B4881D78AFB72E130",
+      "size_bytes": 405,
+      "last_write": "2026-07-01T15:45:16.9205300+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": true,
+      "note": "NapCat runtime config (contains tokens/passkey; never quote values)"
+    },
+    {
+      "original_path": "E:\\QQbot\\NapCat\\NapCat.44498.Shell\\versions\\9.9.26-44498\\resources\\app\\napcat\\config\\passkey.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\napcat_config\\passkey.json",
+      "sha256": "44136FA355B3678A1146AD16F7E8649E94FB4FC21FE77E8310C060F61CAAFF8A",
+      "size_bytes": 2,
+      "last_write": "2026-06-06T12:42:33.1158745+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": true,
+      "note": "NapCat runtime config (contains tokens/passkey; never quote values)"
+    },
+    {
+      "original_path": "E:\\QQbot\\NapCat\\NapCat.44498.Shell\\versions\\9.9.26-44498\\resources\\app\\napcat\\config\\plugins.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\napcat_config\\plugins.json",
+      "sha256": "16075E4FF0A060E721CDC2C6D557A012E67E0C4CEA625427D82978AFFFAFA844",
+      "size_bytes": 32,
+      "last_write": "2026-06-28T21:44:43.9835457+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": true,
+      "note": "NapCat runtime config (contains tokens/passkey; never quote values)"
+    },
+    {
+      "original_path": "E:\\QQbot\\NapCat\\NapCat.44498.Shell\\versions\\9.9.26-44498\\resources\\app\\napcat\\config\\webui.json",
+      "backup_path": "E:\\QQbot\\qq_native_re\\patches\\llbot_trial_20261024-194032\\napcat_config\\webui.json",
+      "sha256": "0124ED63BD54A1DE2597B45A4B0530E0144FB6B2D7C4181E4C5749A7046CD2BB",
+      "size_bytes": 14161,
+      "last_write": "2026-06-06T10:56:08.1549201+08:00",
+      "backed_up_at": "2026-10-24T19:40:32.0988235+08:00",
+      "sensitive": true,
+      "note": "NapCat runtime config (contains tokens/passkey; never quote values)"
+    }
+  ],
+  "integrity_snapshot": [
+    {
+      "path": "E:\\QQbot\\data\\private\\.gitignore",
+      "sha256": "240A3E0D37D2E86B614063F5347EB02D4F99CA6C254DE6B82871FF8D95532A7D",
+      "size_bytes": 14,
+      "last_write": "2026-10-20T07:07:08.8443331+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\data\\private\\784427550\\activities.json",
+      "sha256": "3B143535FE04F1F305439B968848B84155E25190364CCAC7FB1E13855FE26AAC",
+      "size_bytes": 3215,
+      "last_write": "2026-10-24T13:35:38.7099080+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\data\\private\\784427550\\attempts.jsonl",
+      "sha256": "C45B90F75F64614C957045AFD644311F70A7AD7508B9FCE8B05CE8B8DCCAEB03",
+      "size_bytes": 14584,
+      "last_write": "2026-10-24T19:11:05.5993800+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\data\\private\\784427550\\dialogue_state.json",
+      "sha256": "B80924F0E7C504D4BF70029111D4D7B0B428342F9374EE63D2FED183DB7934E3",
+      "size_bytes": 657,
+      "last_write": "2026-10-24T19:16:21.2951262+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\data\\private\\784427550\\memories.json",
+      "sha256": "DBBD127954DD46DD2A2B969897222E1D8349C4116055C3685303D2A69EA04B0E",
+      "size_bytes": 106707,
+      "last_write": "2026-10-24T16:35:32.8628084+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\data\\private\\784427550\\profile.json",
+      "sha256": "CFEF8A3560AC29CA812D48FB969C253C856452C553772848EEB19BB567BAFB81",
+      "size_bytes": 618,
+      "last_write": "2026-10-24T16:35:03.7116870+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\data\\private\\784427550\\self_state.json",
+      "sha256": "434BF46D3EB2212DF22E9D8ABF69A15769B48D68EAED78350866F970B78D724E",
+      "size_bytes": 858,
+      "last_write": "2026-10-24T08:45:22.1030806+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\data\\private\\784427550\\state.json",
+      "sha256": "4235F9A4E37E33C525656106A6361B1C8EB49F678E7CD54726D4077DDB590D6F",
+      "size_bytes": 16469,
+      "last_write": "2026-10-24T19:11:05.6598057+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\data\\private\\784427550\\style.json",
+      "sha256": "9978CDABE41E19B19B1C3F56149F8E0F7B28D7E2300187FF013545A608238E49",
+      "size_bytes": 167,
+      "last_write": "2026-10-24T16:34:56.7773058+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\data\\private\\784427550\\summaries.json",
+      "sha256": "97D038149EA56B9407F11E1D2010790848C9BCBF2E1224B109B88E2CE0285B77",
+      "size_bytes": 1628,
+      "last_write": "2026-10-24T08:45:22.0974536+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\data\\private\\784427550\\sessions\\2026-10-20.jsonl",
+      "sha256": "9FAFF1D5EF3D05EC29D68B571AD1CE37BD01F08E2C2A3B5108A1024F43A30438",
+      "size_bytes": 22985,
+      "last_write": "2026-10-21T06:45:37.5580780+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\data\\private\\784427550\\sessions\\2026-10-21.jsonl",
+      "sha256": "36FC1A1AF996F1C55F42C61A31FBD29BD6FC7BAE9435735FE585DF02EFE4406F",
+      "size_bytes": 26018,
+      "last_write": "2026-10-21T21:29:54.1018269+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\data\\private\\784427550\\sessions\\2026-10-22.jsonl",
+      "sha256": "A960C8EA62027FFB120E722DAA9F123FDCE0D1E80D549500FF499B73AB2ED4BF",
+      "size_bytes": 17976,
+      "last_write": "2026-10-23T08:47:00.6148536+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\data\\private\\784427550\\sessions\\2026-10-23.jsonl",
+      "sha256": "DE4B7275BD86B7F7580505048EE9FB353F38613A5DA2BDE21A9C04237BBE8715",
+      "size_bytes": 15543,
+      "last_write": "2026-10-23T21:35:59.0270731+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\data\\private\\784427550\\sessions\\2026-10-24.jsonl",
+      "sha256": "1213968F55DEC013346B10A032BE9A3D8555AF2011909B819809682BE04A965B",
+      "size_bytes": 20831,
+      "last_write": "2026-10-24T16:35:03.7116870+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\data\\roster.json",
+      "sha256": "EF5AAC34183993A2B868F6B3705807854141FA6CF055311A84E462C839663669",
+      "size_bytes": 34113,
+      "last_write": "2026-10-24T17:25:07.8693727+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\user_profiles.json",
+      "sha256": "39B1B48EE0F1144ECDE76356484640F0F01740B0F63F0C7ECE64AE5E1BE56C3D",
+      "size_bytes": 57965,
+      "last_write": "2026-10-24T19:24:17.0059603+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\menu_data.json",
+      "sha256": "9E02C805911ECF844B2F81C8BF8D3EE0D5A3F95AE0BB619A17B30E4E0C1358CE",
+      "size_bytes": 1871,
+      "last_write": "2026-10-13T20:00:48.4336754+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\scripts\\sign_in_data.json",
+      "sha256": "B6BE64892F6092ECBDDFC90932B4CDA295433A4E070F375E8611C09482AE0963",
+      "size_bytes": 3555,
+      "last_write": "2026-10-24T17:25:49.2993010+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\logs\\_tool_probe.jsonl",
+      "sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+      "size_bytes": 0,
+      "last_write": "2026-10-12T07:49:15.8480669+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\logs\\bot.2026-09-29.log",
+      "sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+      "size_bytes": 0,
+      "last_write": "2026-09-29T08:02:38.4297882+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\logs\\bot.2026-10-12.log",
+      "sha256": "FD91387C8A32E8B4AEB63F7D13B89463899A5BD790DA20E2D7A16F1E703451C2",
+      "size_bytes": 180695,
+      "last_write": "2026-10-13T07:53:43.1796780+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\logs\\bot.2026-10-13.log",
+      "sha256": "4B3E6DF27893233C64E0103BFB9B5E22BE60CFC7B3F8EE4CBEA451BD82AE26C0",
+      "size_bytes": 363493,
+      "last_write": "2026-10-13T22:36:22.9832699+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\logs\\bot.2026-10-14.log",
+      "sha256": "2B1E3DF90F1E0399F3CB3D8D8C23BA254C23732DEC042A5F919124143E92DAC9",
+      "size_bytes": 287405,
+      "last_write": "2026-10-14T22:47:01.7229535+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\logs\\bot.2026-10-15.log",
+      "sha256": "077A3439D93082AA7D6D25B1CD3BC7465987A4D13C9282CD58E18790811B4DCD",
+      "size_bytes": 553901,
+      "last_write": "2026-10-17T10:11:41.5884190+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\logs\\bot.2026-10-17.log",
+      "sha256": "4EF31EA528316D65EB0651655CED8CE5EB8D706D104572A084D2D5D5EC244AFF",
+      "size_bytes": 219302,
+      "last_write": "2026-10-17T22:35:50.9114624+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\logs\\bot.2026-10-18.log",
+      "sha256": "42498628714E0EFC6CF90DA005D9022D6B9BEF961404CA7129642028D8BE475E",
+      "size_bytes": 307769,
+      "last_write": "2026-10-18T22:18:30.9330590+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\logs\\bot.2026-10-19.log",
+      "sha256": "250BCF93A108CDEEE83F00357A08FF5299A1BF35E8BE18E0F2725C4E19F33320",
+      "size_bytes": 395514,
+      "last_write": "2026-10-19T22:20:21.6843629+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\logs\\bot.2026-10-20.log",
+      "sha256": "D6096600943AC65D4F72087352997F2626159C4359287C69632EFA5B4274F71B",
+      "size_bytes": 345226,
+      "last_write": "2026-10-21T06:43:34.3391198+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\logs\\bot.2026-10-21.log",
+      "sha256": "84365555744D2CBA1556BE5FF6182B21F26DB0006BA2E4FC5D632C53D2F6B81A",
+      "size_bytes": 249372,
+      "last_write": "2026-10-21T22:06:24.4046740+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\logs\\bot.2026-10-22.log",
+      "sha256": "8C49991B266ACA94DE3A6D852029FFAAA4EFDF60FF8CF71CF7112E0A78AF02E0",
+      "size_bytes": 374541,
+      "last_write": "2026-10-24T19:36:26.3716504+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\logs\\bot.2026-10-24.log",
+      "sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+      "size_bytes": 0,
+      "last_write": "2026-10-24T12:07:15.6405813+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\logs\\llm_pool.jsonl",
+      "sha256": "E6F7CE817434BC500C589F49D8C69A2E37E3DF21F271858B0A13CB6F17CDAED9",
+      "size_bytes": 755891,
+      "last_write": "2026-10-24T19:24:17.0012295+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\logs\\private_bot.2026-10-20.log",
+      "sha256": "59CAC73AF5F12CCFCDF19CB77833138C57CEE52752D742B402C500409E11A950",
+      "size_bytes": 25166,
+      "last_write": "2026-10-20T22:28:09.7305522+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\logs\\private_bot.2026-10-21.log",
+      "sha256": "4BDFEFF0C488DF4A6F9EE595CEBC31D0CC411A6510EC0A1B0450D7F3E35798FB",
+      "size_bytes": 19162,
+      "last_write": "2026-10-21T22:06:23.0363133+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\logs\\private_bot.2026-10-22.log",
+      "sha256": "584621DA14C6955EC1B76D60CDAAD5A6F23EFCE59213BDC34405C09BFA6B3C94",
+      "size_bytes": 26417,
+      "last_write": "2026-10-24T12:56:30.9835639+08:00"
+    },
+    {
+      "path": "E:\\QQbot\\logs\\private_bot.2026-10-24.log",
+      "sha256": "CC94D3079314AF0C7A72D27490AC72C21A3B10DF124F277E5A34120FD07B3E4B",
+      "size_bytes": 8837,
+      "last_write": "2026-10-24T19:16:21.3011507+08:00"
+    }
+  ],
+  "napcat_fingerprints": [
+    {
+      "path": "E:\\QQbot\\NapCat\\NapCat.44498.Shell\\NapCatWinBootMain.exe",
+      "sha256": "8B860A0BE0993211C8664A08097D09979FB7E3406F63247C5A3B4251DAD8E744",
+      "size_bytes": 32768
+    },
+    {
+      "path": "E:\\QQbot\\NapCat\\NapCat.44498.Shell\\NapCatWinBootHook.dll",
+      "sha256": "E7F9D3AEC57B82E2FDB8EE2C874845641D8ED60BA7741FE2B20BE2DE9305D172",
+      "size_bytes": 18944
+    },
+    {
+      "path": "E:\\QQbot\\NapCat\\NapCat.44498.Shell\\QQ.exe",
+      "sha256": "F6B11EA623BF4E018554BFAFCE83CF306EFB3CBDA26F4BD19DFE93010EB128D4",
+      "size_bytes": 1653808
+    },
+    {
+      "path": "E:\\QQbot\\NapCat\\NapCat.44498.Shell\\versions\\9.9.26-44498\\resources\\app\\napcat\\napcat.mjs",
+      "sha256": "F80E4BE3E8640369D23846CF3E8BCFD2A5B6DC5920F50D7AD733D7CCA18179E6",
+      "size_bytes": 3130951
+    },
+    {
+      "path": "E:\\QQbot\\tools\\start_napcat_verbose.bat",
+      "sha256": "1A418E98E26536001272062ADE371692C6FEE0E1C61D78AA515432D9E8D736CC",
+      "size_bytes": 8646
+    }
+  ],
+  "notes": [
+    "backup_entries 为实际复制的文件；integrity_snapshot 只记录哈希，不复制私聊内容。",
+    "sensitive=true 的备份含本地 token/passkey，仅存本机，不得写入报告或外发。",
+    ".env 未备份：本轮不修改，且避免复制 API key。"
+  ]
+}

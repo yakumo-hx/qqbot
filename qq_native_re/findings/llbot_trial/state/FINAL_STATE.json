@@ -1,0 +1,37 @@
+{
+  "generated_at": "2026-10-24T21:58:12+08:00",
+  "confirmed": {
+    "napcat_webui_6099_listening": true,
+    "reverse_bot_8080_listening": true,
+    "private_bot_8081_listening": true,
+    "napcat_ws_established_to_8080_8081": true,
+    "bot_account_online_evidence": "get_friend_msg_history succeeded (private_bot history pull 20) + end-to-end replies at 21:48-21:49",
+    "production_bots_pids": {
+      "reverse_parent": 103392,
+      "reverse_child": 84588,
+      "private_parent": 96888,
+      "private_child": 94940
+    },
+    "napcat_pids": {
+      "winboot": 83620,
+      "qq_core": 91064,
+      "webui_owner": 67980
+    },
+    "no_trial_processes": true,
+    "probes_stopped": true
+  },
+  "rollback": {
+    "verdict": "PASS",
+    "notes": [
+      "production config 0 changes (44 backup entries verified)",
+      "data/private changed only after production restart by normal history backfill + smoke test",
+      "smoke test private sent msg_id 2010684556; group reply sent at 21:49:09"
+    ]
+  },
+  "known_issues": [
+    "@ detection needs regex patch for [CQ:at,qq=..,name=..]",
+    "get_group_notice retcode 1404",
+    "headful QQ crash dialog wrapper.node (attribution UNKNOWN)",
+    "SOAK_PENDING"
+  ]
+}
