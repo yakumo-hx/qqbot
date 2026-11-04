@@ -137,3 +137,7 @@ data/stickers/
 
 # ---------- PR 上游快照（可重新抓取，避免重复代码入库）----------
 qq_native_re/findings/pr1/upstream/
+
+# ---------- 本地备份与 ACL 修复产物 ----------
+backups/
+acl-recovery-*/

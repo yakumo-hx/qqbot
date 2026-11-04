@@ -1,0 +1,12 @@
+data/
+reports/
+_inspect/
+__pycache__/
+*.pyc
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+# 体积巨大的实验产物与评测数据（含真实群聊），不进 git
+experiments/
+evolve/
+eval/data/
