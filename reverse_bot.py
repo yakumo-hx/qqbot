@@ -26,6 +26,7 @@ import websockets
 from scripts.interaction_menu import InteractionMenus
 from scripts.offline_watchdog import get_watchdog
 from scripts import reference as reference_mod
+from scripts import group_history
 
 # ========== 并发安全锁 ==========
 _plus_one_locks: dict = {}
@@ -402,6 +403,12 @@ async def handle_message(websocket, data: dict):
         ref_record = None
         bot_logger.info(f"[指代] 注解失败（已忽略，不影响回复）: {_e}")
 
+    # ===== 群聊语料（旁路记录，只入队；任何失败都不得影响消息处理）=====
+    try:
+        group_history.record(gid_str, data, ref_record)
+    except Exception:
+        pass
+
     message_images = image_utils.parse_cq_images(raw_message)
     if message_images:
         image_cache.remember(
@@ -706,6 +713,14 @@ async def main():
                         f"索引窗口={_ref_cfg.get('index_max_per_group')}条/群")
     except Exception as _e:
         bot_logger.info(f"[指代] 初始化失败，功能降级为不注解: {_e}")
+
+    # 初始化群聊语料记录器（被动落盘 JSONL，见 scripts/group_history.py）
+    try:
+        _gh_cfg = group_history.configure()
+        bot_logger.info(f"[语料] 群聊记录已启用={_gh_cfg.get('enabled')} "
+                        f"群={_gh_cfg.get('groups')}")
+    except Exception as _e:
+        bot_logger.info(f"[语料] 初始化失败，功能降级为不记录: {_e}")
 
     # 初始化命令处理器外部引用
     init_handlers(bot_logger, decision_engine, send_message, send_group_image, send_group_file,

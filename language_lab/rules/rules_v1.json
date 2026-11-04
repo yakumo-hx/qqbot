@@ -1,0 +1,358 @@
+{
+  "version": 1,
+  "generated_at": "2026-10-30T14:21:18+08:00",
+  "gid": "284517232",
+  "subset": {
+    "sources": [
+      "capture",
+      "llbot",
+      "recorder"
+    ],
+    "min_day": "2026-10-24",
+    "n_messages": 5798,
+    "n_text": 4679,
+    "n_train": 3334,
+    "n_test": 2464
+  },
+  "rules": [
+    {
+      "id": "A1",
+      "layer": "form",
+      "statement": "短句为主：中位 8 字，P90 20 字；≤6 字的占 41.5%",
+      "value": {
+        "median_len": 8,
+        "p90_len": 20,
+        "short_share": 41.5,
+        "len_buckets": {
+          "7-10": 1159,
+          "11-20": 1127,
+          "1-3": 832,
+          "4-6": 1110,
+          "21+": 451
+        }
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "A2",
+      "layer": "form",
+      "statement": "句尾基本不加标点（86.3%），句号仅 4.8%，问句 11.5%",
+      "value": {
+        "no_end_punct": 86.3,
+        "period": 4.8,
+        "question": 11.5,
+        "exclaim": 0.7,
+        "ellipsis": 1.6,
+        "tilde": 0.3
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "A3",
+      "layer": "form",
+      "statement": "形式克制：emoji 3.2%，媒体消息（图片/贴图/转发等）18.9%，引用回复 17.0%，@ 18.1%",
+      "value": {
+        "emoji": 3.2,
+        "media": 18.9,
+        "media_kinds": {
+          "image": 944,
+          "face": 38,
+          "forward": 117,
+          "video": 11,
+          "file": 5,
+          "voice": 4,
+          "link": 5
+        },
+        "reply": 17.0,
+        "at": 18.1,
+        "url": 0.3
+      },
+      "confidence": "medium",
+      "note": "跨天漂移偏大：at=23.6%"
+    },
+    {
+      "id": "A4",
+      "layer": "rhythm",
+      "statement": "连发常见：56.9% 的消息属于 2 条以上连发组（单条 43.1%），平均 1.56 条/组，35.7% 是连发追加",
+      "value": {
+        "burst_message_share": 56.9,
+        "continuation_share": 35.7,
+        "single_share": 43.1,
+        "burst_avg": 1.56,
+        "burst_hist": {
+          "1": 2501,
+          "2": 763,
+          "3": 276,
+          "4": 104,
+          "5": 41,
+          "6": 25,
+          "7": 5,
+          "8": 4,
+          "9": 3,
+          "10": 2,
+          "11": 1,
+          "12": 1,
+          "15": 1,
+          "20": 1
+        }
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "A5",
+      "layer": "rhythm",
+      "statement": "回复节奏：引用回复延迟中位 22.0s，P90 98.0s",
+      "value": {
+        "median_s": 22.0,
+        "p90_s": 98.0,
+        "n": 760
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "D1",
+      "layer": "avoid",
+      "statement": "负样本对照：机器人账号中位 25 字、句号 35.7%、emoji 20.6%、问句 35.3%；真人为 8 字 / 4.8% / 3.2% / 11.5%",
+      "value": {
+        "bot": {
+          "median_len": 25,
+          "period": 35.7,
+          "emoji": 20.6,
+          "question": 35.3
+        },
+        "human": {
+          "median_len": 8,
+          "period": 4.8,
+          "emoji": 3.2,
+          "question": 11.5
+        }
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "D2",
+      "layer": "avoid",
+      "statement": "回避机器人高频形式（标点/颜文字/语气词）：，、。、？、>_<、…、！、~、啦",
+      "value": {
+        "words": [
+          {
+            "word": "，",
+            "human_per_1k": 14.82,
+            "bot_per_1k": 32.2
+          },
+          {
+            "word": "。",
+            "human_per_1k": 5.56,
+            "bot_per_1k": 17.05
+          },
+          {
+            "word": "？",
+            "human_per_1k": 7.64,
+            "bot_per_1k": 12.88
+          },
+          {
+            "word": ">_<",
+            "human_per_1k": 0.0,
+            "bot_per_1k": 3.81
+          },
+          {
+            "word": "…",
+            "human_per_1k": 3.41,
+            "bot_per_1k": 7.19
+          },
+          {
+            "word": "！",
+            "human_per_1k": 0.66,
+            "bot_per_1k": 3.69
+          },
+          {
+            "word": "~",
+            "human_per_1k": 0.09,
+            "bot_per_1k": 2.21
+          },
+          {
+            "word": "啦",
+            "human_per_1k": 0.29,
+            "bot_per_1k": 2.21
+          }
+        ]
+      },
+      "confidence": "high"
+    }
+  ],
+  "contrast": {
+    "n_bot": 1065,
+    "metrics": {
+      "n": 1065,
+      "n_text": 1061,
+      "median_len": 25,
+      "mean_len": 31.2,
+      "p90_len": 58,
+      "len_buckets": {
+        "21+": 668,
+        "11-20": 211,
+        "7-10": 80,
+        "4-6": 84,
+        "1-3": 18
+      },
+      "no_end_punct": 37.6,
+      "period": 35.7,
+      "question": 35.3,
+      "exclaim": 10.3,
+      "ellipsis": 13.9,
+      "tilde": 12.0,
+      "emoji": 20.6,
+      "media": 0.2,
+      "media_kinds": {
+        "image": 2
+      },
+      "reply": 12.0,
+      "at": 10.5,
+      "url": 0.0,
+      "ai_tell": 0.1
+    },
+    "avoid_words": [
+      {
+        "word": "，",
+        "human_per_1k": 14.82,
+        "bot_per_1k": 32.2
+      },
+      {
+        "word": "。",
+        "human_per_1k": 5.56,
+        "bot_per_1k": 17.05
+      },
+      {
+        "word": "？",
+        "human_per_1k": 7.64,
+        "bot_per_1k": 12.88
+      },
+      {
+        "word": ">_<",
+        "human_per_1k": 0.0,
+        "bot_per_1k": 3.81
+      },
+      {
+        "word": "…",
+        "human_per_1k": 3.41,
+        "bot_per_1k": 7.19
+      },
+      {
+        "word": "！",
+        "human_per_1k": 0.66,
+        "bot_per_1k": 3.69
+      },
+      {
+        "word": "~",
+        "human_per_1k": 0.09,
+        "bot_per_1k": 2.21
+      },
+      {
+        "word": "啦",
+        "human_per_1k": 0.29,
+        "bot_per_1k": 2.21
+      }
+    ]
+  },
+  "stability": {
+    "median_len": {
+      "train": 8,
+      "test": 8.0,
+      "relative_drift": 0.0,
+      "stable": true
+    },
+    "no_end_punct": {
+      "train": 87.3,
+      "test": 85.0,
+      "relative_drift": 0.026,
+      "stable": true
+    },
+    "emoji": {
+      "train": 3.4,
+      "test": 2.9,
+      "relative_drift": 0.147,
+      "stable": true
+    },
+    "media": {
+      "train": 18.5,
+      "test": 19.3,
+      "relative_drift": 0.043,
+      "stable": true
+    },
+    "reply": {
+      "train": 17.5,
+      "test": 16.2,
+      "relative_drift": 0.074,
+      "stable": true
+    },
+    "at": {
+      "train": 16.5,
+      "test": 20.4,
+      "relative_drift": 0.236,
+      "stable": false
+    },
+    "question": {
+      "train": 11.2,
+      "test": 11.9,
+      "relative_drift": 0.063,
+      "stable": true
+    },
+    "burst_message_share": {
+      "train": 58.0,
+      "test": 55.3,
+      "relative_drift": 0.047,
+      "stable": true
+    },
+    "reply_latency_median": {
+      "train": 22.0,
+      "test": 22.0,
+      "relative_drift": 0.0,
+      "stable": true
+    }
+  },
+  "rhythm": {
+    "sessions": 50,
+    "burst_messages": 5798,
+    "burst_message_share": 56.9,
+    "continuation_share": 35.7,
+    "single_share": 43.1,
+    "burst_avg": 1.56,
+    "burst_hist": {
+      "1": 2501,
+      "2": 763,
+      "3": 276,
+      "4": 104,
+      "5": 41,
+      "6": 25,
+      "7": 5,
+      "8": 4,
+      "9": 3,
+      "10": 2,
+      "11": 1,
+      "12": 1,
+      "15": 1,
+      "20": 1
+    },
+    "reply_latency_median": 22.0,
+    "reply_latency_p90": 98.0,
+    "reply_latency_n": 760,
+    "hour_dist": {
+      "7": 81,
+      "8": 196,
+      "9": 481,
+      "10": 611,
+      "11": 137,
+      "12": 191,
+      "13": 480,
+      "14": 440,
+      "15": 600,
+      "16": 705,
+      "17": 168,
+      "18": 471,
+      "19": 419,
+      "20": 267,
+      "21": 332,
+      "22": 219
+    }
+  }
+}

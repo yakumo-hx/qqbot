@@ -1,0 +1,44 @@
+{
+  "gid": "284517232",
+  "group_name": "碧油鸡乐土（转正版）",
+  "bot_uids": [
+    "2668851638",
+    "3769537770",
+    "4012436635",
+    "3889001246"
+  ],
+  "bot_names": [
+    "大肥鱼",
+    "爱尔奎特的十七分之一",
+    "洛希亚",
+    "幽幽子"
+  ],
+  "sources": {
+    "bot_logs": "logs/bot.2026-*.log",
+    "llbot_logs": "E:/QQbot-trials/llbot/bin/llbot/data/logs/llbot-*.log",
+    "live_dir": "language_lab/data/group_history/_live",
+    "roster": "data/roster.json"
+  },
+  "corpus": {
+    "dir": "language_lab/data/group_history",
+    "start_day": "2026-10-20",
+    "end_day": null,
+    "dedupe_seconds": 5,
+    "max_text_chars": 4000,
+    "botlog_gid": "284517232"
+  },
+  "selection": {
+    "window_start": "2026-10-24",
+    "window_end": "2026-10-28",
+    "min_messages": 100,
+    "min_active_days": 4,
+    "min_substantive_ratio": 0.40,
+    "median_len_min": 3,
+    "median_len_max": 60,
+    "max_duplicate_ratio": 0.35,
+    "max_link_ratio": 0.02,
+    "substantive_min_chars": 6,
+    "top_n": 6
+  },
+  "retention_days": 90
+}

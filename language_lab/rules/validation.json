@@ -1,0 +1,56 @@
+{
+  "median_len": {
+    "train": 8,
+    "test": 8.0,
+    "relative_drift": 0.0,
+    "stable": true
+  },
+  "no_end_punct": {
+    "train": 87.3,
+    "test": 85.0,
+    "relative_drift": 0.026,
+    "stable": true
+  },
+  "emoji": {
+    "train": 3.4,
+    "test": 2.9,
+    "relative_drift": 0.147,
+    "stable": true
+  },
+  "media": {
+    "train": 18.5,
+    "test": 19.3,
+    "relative_drift": 0.043,
+    "stable": true
+  },
+  "reply": {
+    "train": 17.5,
+    "test": 16.2,
+    "relative_drift": 0.074,
+    "stable": true
+  },
+  "at": {
+    "train": 16.5,
+    "test": 20.4,
+    "relative_drift": 0.236,
+    "stable": false
+  },
+  "question": {
+    "train": 11.2,
+    "test": 11.9,
+    "relative_drift": 0.063,
+    "stable": true
+  },
+  "burst_message_share": {
+    "train": 58.0,
+    "test": 55.3,
+    "relative_drift": 0.047,
+    "stable": true
+  },
+  "reply_latency_median": {
+    "train": 22.0,
+    "test": 22.0,
+    "relative_drift": 0.0,
+    "stable": true
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "enabled": true,
+  "groups": ["284517232", "1055881417"],
+  "dir": "language_lab/data/group_history/_live",
+  "max_queue": 2000,
+  "bot_uids": ["2668851638", "3769537770", "4012436635", "3889001246"],
+  "max_text_chars": 4000
+}
