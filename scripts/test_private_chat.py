@@ -59,6 +59,7 @@ def make_cfg(data_dir: str) -> dict:
     cfg = cfgmod.load_config()
     cfg["data_dir"] = data_dir
     cfg["allowed_users"] = [UID]
+    cfg.setdefault("persona", {})["mode"] = "card"
     cfg["reply"].update({
         "debounce_seconds": 0.01,
         "debounce_jitter_seconds": 0.0,
@@ -907,9 +908,34 @@ class PureTest(unittest.TestCase):
             card = persona_mod.build_persona_card(cfg, store, UID)
             self.assertIn("大肥鱼", card)
             self.assertIn("亲近", card)
-            self.assertLessEqual(len(card), 1600)
+            limit = int((cfg.get("persona") or {}).get("card_max_chars", 1600) or 1600)
+            self.assertLessEqual(len(card), limit)
             store.update_profile(UID, relationship={"stage": "intimate"})
             self.assertIn("亲密", persona_mod.build_persona_card(cfg, store, UID))
+        finally:
+            shutil.rmtree(base, ignore_errors=True)
+
+    def test_raw_persona_mode(self):
+        base = make_test_dir("rawpersona")
+        try:
+            char_root = os.path.join(base, "characters")
+            char_dir = os.path.join(char_root, "rawtest")
+            os.makedirs(os.path.join(char_dir, "private"), exist_ok=True)
+            os.makedirs(os.path.join(char_dir, "_source"), exist_ok=True)
+            with open(os.path.join(char_dir, "_source", "raw.md"), "w", encoding="utf-8") as f:
+                f.write("固定形象：这是一段原始人设。" * 20)
+            cfg = make_cfg(base)
+            cfg["character"] = "rawtest"
+            cfg["persona"]["mode"] = "raw"
+            with patch.object(cfgmod, "CHARACTERS_DIR", char_root):
+                store = PrivateStore(cfg)
+                card = persona_mod.build_persona_card(cfg, store, UID)
+                self.assertIn("原始人设", card)
+                self.assertIn("【人设原文】", card)
+                system = persona_mod.build_system_prompt(cfg, store, UID, "你好")
+                self.assertIn("原始人设", system)
+                cfg["persona"]["mode"] = "card"
+                self.assertNotIn("原始人设", persona_mod.build_persona_card(cfg, store, UID))
         finally:
             shutil.rmtree(base, ignore_errors=True)
 

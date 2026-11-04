@@ -47,6 +47,8 @@ Adding a command: create/edit a module in `commands/`, decorate with `@register`
 
 Private chat is **0.0.1**, intentionally independent of the group bot's 2.5.0 versioning.
 
+**Disabled by default since 2026-10-25.** `tools/bot_launcher.ps1` has `$EnablePrivateChat = $false`: the launcher only starts and verifies `reverse_bot.py` (:8080), skips `private_bot.py`, and no longer requires an 8081 OneBot endpoint. LLBot's `ws://127.0.0.1:8081` ws-reverse is also `enable: false`. Re-enabling needs both places changed. The private-chat code and `data/private/` are untouched.
+
 ## Gotchas
 
 - **`VS_ENABLED` flag is a trap.** `scripts/command_handler.py` still has `VS_ENABLED = False` guarding a `from scripts.virtual_stock import ...` block, but `scripts/virtual_stock/` was removed from the working copy. Flipping it to `True` will `ImportError`. The virtual stock module lives only in git history (`git show HEAD:scripts/virtual_stock/`).

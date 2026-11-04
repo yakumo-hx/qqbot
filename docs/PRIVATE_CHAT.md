@@ -134,7 +134,9 @@ config/characters/大肥鱼/private/
   corrections.json   纠偏规则
 ```
 
-每轮只把编译后的「人设卡」放进 system prompt（默认 ≤1600 字符），不会把完整人设全文塞进去。
+每轮只把编译后的「人设卡」放进 system prompt（默认 ≤6000 字符，`persona.card_max_chars` 可配），不会把完整人设全文塞进去。
+
+`persona.mode="raw"` 时跳过四文件解析，直接把 `persona.raw_file`（默认 `<character>/_source/raw.md`）作为整张人设卡；改回 `persona.mode="card"` 即可恢复结构化编译。两种模式都保留场景、记忆、自我状态、活动和输出契约。
 
 ### 关系四档
 

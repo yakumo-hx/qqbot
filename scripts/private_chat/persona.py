@@ -77,6 +77,24 @@ def _truncate(text: str, limit: int) -> str:
     return text[:max(0, limit - 1)].rstrip() + "…"
 
 
+def _raw_persona_text(cfg: dict) -> str:
+    """raw 模式：直接读取原始人设长文；不解析任何 ## 小节。
+
+    raw_file 默认相对于角色目录（<character>/_source/raw.md）。
+    """
+    data = cfg.get("persona")
+    if not isinstance(data, dict):
+        return ""
+    if str(data.get("mode") or "card").strip().lower() != "raw":
+        return ""
+    name = str(data.get("raw_file") or "_source/raw.md").strip() or "_source/raw.md"
+    if os.path.isabs(name):
+        path = name
+    else:
+        path = os.path.join(os.path.dirname(private_dir(cfg)), name)
+    return _clean(_read(path))
+
+
 def load_identity(cfg: dict) -> dict:
     md = _read(os.path.join(private_dir(cfg), "identity.md"))
     return {
@@ -128,6 +146,34 @@ def stage_of(store: PrivateStore, uid: str, rel: dict) -> tuple[str, dict]:
     if not isinstance(info, dict):
         info = {}
     return stage, info
+
+
+def _address_of(rel: dict, voice: dict, prof: dict) -> str:
+    """称呼优先级：relationship.address > voice.address（短文本）> QQ 昵称。"""
+    for source in (rel.get("address"), voice.get("address")):
+        text = str(source or "").strip()
+        if 0 < len(text) <= 20:
+            return text
+    return cfgmod.normalize_display_name(prof.get("display_name"))
+
+
+def _persona_int(cfg: dict, key: str, default: int) -> int:
+    data = cfg.get("persona")
+    raw = data.get(key) if isinstance(data, dict) else None
+    try:
+        return max(1, int(raw if raw is not None else default))
+    except (TypeError, ValueError):
+        return default
+
+
+def _cap(cfg: dict, key: str, default: int) -> int:
+    data = cfg.get("persona")
+    caps = data.get("caps") if isinstance(data, dict) else None
+    raw = caps.get(key) if isinstance(caps, dict) else None
+    try:
+        return max(1, int(raw if raw is not None else default))
+    except (TypeError, ValueError):
+        return default
 
 
 def _time_line() -> str:
@@ -183,19 +229,27 @@ def _self_state_block(state: dict) -> str:
 
 
 def build_persona_card(cfg: dict, store: PrivateStore, uid: str,
-                       max_chars: int = 1600) -> str:
-    """把私聊人设文件编译成一张小卡（默认 ≤1200 字符）。
+                       max_chars: Optional[int] = None) -> str:
+    """把私聊人设编译成一张卡。
 
-    must（身份/关系/边界/纠偏）永远保留；nice（性格/日常/声线/口头禅）先被压缩。
+    默认仍走四文件结构化编译；`persona.mode="raw"` 时直接读取
+    `persona.raw_file`（默认 `<character>/_source/raw.md`）作为整张卡，
+    不再解析 `##` 小节。上限取自 card_max_chars / raw_max_chars。
     """
+    if max_chars is None:
+        max_chars = _persona_int(cfg, "card_max_chars", 1600)
+    raw = _raw_persona_text(cfg)
+    if raw:
+        limit = max(1, min(max_chars, _persona_int(cfg, "raw_max_chars", max_chars)))
+        return _truncate("【人设原文】以下是你的人物设定，请按此扮演：\n\n" + raw, limit)
     ident = load_identity(cfg)
     voice = load_voice(cfg)
     rel = load_relationship(cfg)
     stage, info = stage_of(store, uid, rel)
     prof = store.profile(uid)
-    display_name = cfgmod.normalize_display_name(prof.get("display_name"))
+    address = _address_of(rel, voice, prof)
 
-    core = _truncate(ident.get("core"), 420)
+    core = _truncate(ident.get("core"), _cap(cfg, "core", 420))
     if not core:
         core = "你是大肥鱼，一个正在和对方一对一私聊的蓝色鲸鱼娘；短句、口语、傲娇但心软。"
 
@@ -203,7 +257,7 @@ def build_persona_card(cfg: dict, store: PrivateStore, uid: str,
     tone = _truncate(str(info.get("tone") or ""), 160)
     must_parts = [
         "【身份】" + core,
-        f"【关系】当前阶段：{stage_label}（{stage}）；{tone} 称呼对方：{display_name}。",
+        f"【关系】当前阶段：{stage_label}（{stage}）；{tone} 称呼对方：{address}。",
         "【边界】" + ("；".join(rel.get("boundaries") or []) or "不编造、不越界。"),
     ]
     corr = corrections_mod.rules_text(load_corrections(cfg), limit=3)
@@ -213,17 +267,17 @@ def build_persona_card(cfg: dict, store: PrivateStore, uid: str,
 
     nice_parts = []
     if ident.get("traits"):
-        nice_parts.append("【性格】" + _truncate(ident["traits"], 220))
+        nice_parts.append("【性格】" + _truncate(ident["traits"], _cap(cfg, "traits", 220)))
     if voice.get("self") or voice.get("speaking"):
-        nice_parts.append("【说话】" + _truncate(" ".join(x for x in (voice.get("self"), voice.get("speaking")) if x), 320))
+        nice_parts.append("【说话】" + _truncate(" ".join(x for x in (voice.get("self"), voice.get("speaking")) if x), _cap(cfg, "speaking", 320)))
     if voice.get("blacklist"):
-        nice_parts.append("【禁区】" + _truncate(voice["blacklist"], 240))
+        nice_parts.append("【禁区】" + _truncate(voice["blacklist"], _cap(cfg, "blacklist", 240)))
     if ident.get("daily"):
-        nice_parts.append("【日常】" + _truncate(ident["daily"], 160))
+        nice_parts.append("【日常】" + _truncate(ident["daily"], _cap(cfg, "daily", 160)))
     if voice.get("phrases"):
-        nice_parts.append("【常用语】" + _truncate(voice["phrases"], 180))
+        nice_parts.append("【常用语】" + _truncate(voice["phrases"], _cap(cfg, "phrases", 180)))
     if ident.get("avoid"):
-        nice_parts.append("【不要演成】" + _truncate(ident["avoid"], 120))
+        nice_parts.append("【不要演成】" + _truncate(ident["avoid"], _cap(cfg, "avoid", 120)))
     nice = "\n".join(nice_parts)
 
     room = max_chars - len(must) - 1
@@ -288,14 +342,16 @@ def _dialogue_block(dialogue, target_messages: list[dict]) -> str:
 
 
 def build_system_prompt(cfg: dict, store: PrivateStore, uid: str, query: str = "",
-                        max_card_chars: int = 1600, plan: Optional[dict] = None,
+                        max_card_chars: Optional[int] = None, plan: Optional[dict] = None,
                         search: Optional[dict] = None,
                         activity: Optional[str] = None,
                         dialogue=None, behavior=None, rhythm=None,
                         target_messages: Optional[list[dict]] = None,
                         structured: bool = False) -> str:
     prof = store.profile(uid)
-    display_name = cfgmod.normalize_display_name(prof.get("display_name"))
+    if max_card_chars is None:
+        max_card_chars = _persona_int(cfg, "card_max_chars", 1600)
+    address = _address_of(load_relationship(cfg), load_voice(cfg), prof)
     card = build_persona_card(cfg, store, uid, max_chars=max_card_chars)
     self_state = store.self_state(uid)
     summary = store.latest_summary(uid)
@@ -306,7 +362,7 @@ def build_system_prompt(cfg: dict, store: PrivateStore, uid: str, query: str = "
 
     blocks = [
         card,
-        f"【场景】现在 {_time_line()}，你在 QQ 上和「{display_name}」一对一私聊。",
+        f"【场景】现在 {_time_line()}，你在 QQ 上和「{address}」一对一私聊。",
         "【你记得的事（长期记忆，只是背景）】\n" + _memory_block(memories),
         "【你最近的状态】\n" + _self_state_block(self_state),
     ]
@@ -393,14 +449,15 @@ def build_messages(cfg: dict, store: PrivateStore, uid: str, query: str = "",
 def build_proactive_prompt(cfg: dict, store: PrivateStore, uid: str, hook: str,
                            activity: Optional[str] = None) -> list[dict]:
     prof = store.profile(uid)
-    display_name = cfgmod.normalize_display_name(prof.get("display_name"))
+    address = _address_of(load_relationship(cfg), load_voice(cfg), prof)
     self_state = store.self_state(uid)
     max_chars = int((cfg.get("proactive") or {}).get("content_max_chars", 80) or 80)
-    card = build_persona_card(cfg, store, uid, max_chars=1200)
+    card_max_chars = _persona_int(cfg, "proactive_card_max_chars", 1200)
+    card = build_persona_card(cfg, store, uid, max_chars=card_max_chars)
     system = (
         card
         + "\n\n【场景】\n"
-        + f"你在 QQ 上和「{display_name}」私聊，现在 {_time_line()}。你想主动发一条消息，不是回复对方。\n"
+        + f"你在 QQ 上和「{address}」私聊，现在 {_time_line()}。你想主动发一条消息，不是回复对方。\n"
         + (f"【对方的状态】\n{activity}\n" if activity else "")
         + "【你最近的状态】\n" + _self_state_block(self_state) + "\n"
         + "【这次想主动说话的依据】\n" + (hook or "只是突然想到对方") + "\n"

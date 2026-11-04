@@ -34,6 +34,22 @@ DEFAULT_CONFIG: dict = {
     "auto_accept_friends": True,
     "data_dir": "data/private",
     "character": "大肥鱼",
+    "persona": {
+        "mode": "card",
+        "raw_file": "_source/raw.md",
+        "raw_max_chars": 6000,
+        "card_max_chars": 6000,
+        "proactive_card_max_chars": 6000,
+        "caps": {
+            "core": 420,
+            "traits": 260,
+            "speaking": 700,
+            "blacklist": 240,
+            "daily": 160,
+            "phrases": 400,
+            "avoid": 120,
+        },
+    },
     "reply": {
         "pipeline": "structured",
         "debounce_seconds": 2.0,
