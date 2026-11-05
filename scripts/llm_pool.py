@@ -881,7 +881,6 @@ async def chat(
     }
 
     order = _build_attempt_order(preferred, vision=vision)
-    started = time.monotonic()
     # 每次尝试的记录：model / kind / err。既用于汇总消息，也用于
     # "是否所有失败都是请求侧错误"的判定（→ LLMPoolRequestError）。
     attempts: list[dict[str, str]] = []
@@ -897,15 +896,19 @@ async def chat(
 
     # 本地网关：trust_env=False 防止系统代理把 127.0.0.1 也劫持了
     async with httpx.AsyncClient(trust_env=False) as client:
+        # 硬截止从首次尝试开始计时（不把客户端初始化算进预算），覆盖所有
+        # 模型尝试、响应头等待、响应 body 读取与重试间隔。不是"每次尝试前
+        # 算 remaining"，而是每次网络等待都受同一个 monotonic deadline 约束。
+        started = time.monotonic()
+        deadline = started + total_budget
         for tier, model in order:
-            elapsed = time.monotonic() - started
-            remaining = total_budget - elapsed
-            if remaining <= 1.0:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
                 pending = ", ".join(m for _, m in order if ("preferred" != m))
                 _record(
                     "<budget>",
                     "budget",
-                    f"总预算 {total_budget:.0f}s 已耗尽，序列中剩余模型未尝试（含 {model}）：{pending}",
+                    f"总预算 {total_budget:.1f}s 已耗尽，序列中剩余模型未尝试（含 {model}）：{pending}",
                 )
                 break
 
@@ -927,16 +930,73 @@ async def chat(
                 # content=null（PROBE R3）→ 该模型不带这个参数
                 payload["response_format"] = response_format
 
-            # 允许配置在运行中被改小而立刻生效
+            # 允许配置在运行中被改小而立刻生效。单次尝试同时受
+            # （调用方 timeout / 配置 attempt_timeout / 剩余总预算）三者约束。
+            # payload 构造后重新取一次 remaining，避免构造耗时把预算挤爆。
             cfg_live = _load_config()
-            attempt_budget = min(float(cfg_live["attempt_timeout_seconds"]), remaining)
-            http_timeout = min(attempt_timeout, attempt_budget)
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                _record(
+                    "<budget>",
+                    "budget",
+                    f"总预算 {total_budget:.1f}s 已耗尽，不再尝试后续模型",
+                )
+                break
+            attempt_budget = min(
+                attempt_timeout,
+                float(cfg_live["attempt_timeout_seconds"]),
+                remaining,
+            )
+            http_timeout = attempt_budget
 
             call_started = time.monotonic()
             try:
-                resp = await client.post(
-                    url, json=payload, headers=headers, timeout=http_timeout
+                # wait_for 把「响应头 + 响应 body」整体包进硬截止：httpx 的
+                # timeout 是单次连接/读取超时，持续缓慢分块可绕过它，导致整次
+                # 请求超过 total_budget 后仍成功返回。
+                resp = await asyncio.wait_for(
+                    client.post(
+                        url, json=payload, headers=headers, timeout=http_timeout
+                    ),
+                    timeout=attempt_budget,
                 )
+            except asyncio.TimeoutError as exc:
+                latency_ms = int((time.monotonic() - call_started) * 1000)
+                if time.monotonic() >= deadline:
+                    err = _sanitize(
+                        f"{type(exc).__name__}: 总预算 {total_budget:.1f}s 耗尽"
+                    )
+                    _record(model, "budget", err)
+                    _record(
+                        "<budget>",
+                        "budget",
+                        f"总预算 {total_budget:.1f}s 已耗尽，不再尝试后续模型",
+                    )
+                    _audit(
+                        label=label,
+                        tier=tier,
+                        model=model,
+                        ok=False,
+                        latency_ms=latency_ms,
+                        err=err,
+                        tokens=None,
+                    )
+                    break
+                err = _sanitize(
+                    f"{type(exc).__name__}: 单次尝试超时 ({attempt_budget:.1f}s)"
+                )
+                _mark_cooldown(model, cooldown)
+                _record(model, "transient", err)
+                _audit(
+                    label=label,
+                    tier=tier,
+                    model=model,
+                    ok=False,
+                    latency_ms=latency_ms,
+                    err=err,
+                    tokens=None,
+                )
+                continue
             except (httpx.TimeoutException, httpx.TransportError, OSError) as exc:
                 latency_ms = int((time.monotonic() - call_started) * 1000)
                 err = _sanitize(f"{type(exc).__name__}: {exc}")
@@ -951,6 +1011,13 @@ async def chat(
                     err=err,
                     tokens=None,
                 )
+                if time.monotonic() >= deadline:
+                    _record(
+                        "<budget>",
+                        "budget",
+                        f"总预算 {total_budget:.1f}s 已耗尽，不再尝试后续模型",
+                    )
+                    break
                 continue
             except Exception as exc:  # 兜底：任何意外都不能让整池崩掉
                 latency_ms = int((time.monotonic() - call_started) * 1000)
@@ -966,6 +1033,13 @@ async def chat(
                     err=err,
                     tokens=None,
                 )
+                if time.monotonic() >= deadline:
+                    _record(
+                        "<budget>",
+                        "budget",
+                        f"总预算 {total_budget:.1f}s 已耗尽，不再尝试后续模型",
+                    )
+                    break
                 continue
 
             latency_ms = int((time.monotonic() - call_started) * 1000)
@@ -1056,6 +1130,30 @@ async def chat(
                     tokens=None,
                 )
                 continue
+
+            # 硬截止：即使拿到了 HTTP 200，只要响应/解析完成时已超过总预算，
+            # 也必须丢弃迟到的成功结果，绝不能返回给调用方。
+            if time.monotonic() >= deadline:
+                late_latency_ms = int((time.monotonic() - call_started) * 1000)
+                err = _sanitize(
+                    f"总预算 {total_budget:.1f}s 耗尽：响应在截止后完成解析，已丢弃"
+                )
+                _record(model, "budget", err)
+                _record(
+                    "<budget>",
+                    "budget",
+                    f"总预算 {total_budget:.1f}s 已耗尽，不再尝试后续模型",
+                )
+                _audit(
+                    label=label,
+                    tier=tier,
+                    model=model,
+                    ok=False,
+                    latency_ms=late_latency_ms,
+                    err=err,
+                    tokens=None,
+                )
+                break
 
             _audit(
                 label=label,

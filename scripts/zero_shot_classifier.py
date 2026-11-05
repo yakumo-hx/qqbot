@@ -11,6 +11,8 @@ import sys
 import os
 import json
 import time
+import functools
+import threading
 
 # 确保能导入上级目录的 set_env.py
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -39,6 +41,19 @@ _CONFIG_PATH = os.path.join(
 
 _DEFAULT_MODEL = "paraphrase-multilingual-MiniLM-L12-v2"
 _FALLBACK_MODEL = "paraphrase-MiniLM-L3-v2"
+
+
+def _serialized_model_call(fn):
+    """把所有共享 SentenceTransformer 模型操作串行化（类级 RLock）。
+
+    覆盖懒加载、单条推理、批量编码。装饰器在真正执行同步模型调用期间持锁，
+    调用方（决策引擎的 worker 线程 / 表情包模块的事件循环调用）无法并发进入。
+    """
+    @functools.wraps(fn)
+    def wrapper(self, *args, **kwargs):
+        with self._shared_model_lock:
+            return fn(self, *args, **kwargs)
+    return wrapper
 
 
 def load_labels(config_path=None):
@@ -72,6 +87,13 @@ class ZeroShotClassifier:
     _shared_load_failed = False
     _shared_load_time = None
 
+    # 进程内所有实例共享同一个 SentenceTransformer；模型加载、推理、批量编码
+    # 必须在**这把类级锁**下串行（不只是每个调用方各自加锁）。这样决策引擎
+    # 线程池里的 classify/encode_batch 不会与表情包模块 get_classifier() 的
+    # encode_batch 并发进入同一个模型实例。RLock 用于 _load_model 被
+    # classify/encode_batch 内层复用的场景。
+    _shared_model_lock = threading.RLock()
+
     def __init__(self, model_name=None, cache_folder=None):
         self.model_name = model_name or _DEFAULT_MODEL
         self._cache_folder = cache_folder
@@ -86,11 +108,18 @@ class ZeroShotClassifier:
         elif self.__class__._shared_load_failed:
             self._load_failed = True
 
+    @_serialized_model_call
     def _load_model(self):
         """懒加载模型，优先使用本地缓存，失败时尝试在线加载（类级别单例）"""
         if self._model is not None:
             return
         if self._load_failed:
+            return
+        # 构造时共享模型可能尚未加载，而另一个实例已在类级锁内加载完成：
+        # 直接复用，避免同一进程把同一个 SentenceTransformer 再加载一遍。
+        shared = self.__class__._shared_model
+        if shared is not None:
+            self._model = shared
             return
 
         t0 = time.time()
@@ -159,6 +188,7 @@ class ZeroShotClassifier:
             self.__class__._shared_load_failed = False
             self.__class__._shared_load_time = elapsed
 
+    @_serialized_model_call
     def classify(self, text, candidate_labels=None):
         """
         对输入文本进行零样本分类。
@@ -186,6 +216,7 @@ class ZeroShotClassifier:
         self._last_inference_ms = round((time.time() - t0) * 1000, 1)
         return (best_label, best_score)
 
+    @_serialized_model_call
     def classify_all_scores(self, text, candidate_labels=None):
         """返回所有标签的相似度分值，按降序排列"""
         self._load_model()
@@ -207,6 +238,7 @@ class ZeroShotClassifier:
         indices = np.argsort(sims)[::-1]
         return [(labels[i], float(sims[i])) for i in indices]
 
+    @_serialized_model_call
     def encode_batch(self, texts: list):
         """批量编码文本列表，返回 numpy 嵌入矩阵 (N, dim)。模型未加载时返回空数组。"""
         self._load_model()

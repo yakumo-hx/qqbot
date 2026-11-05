@@ -13,16 +13,18 @@
 """
 
 import asyncio
+import contextvars
 import difflib
 import json
 import os
 import re
 import sys
+import threading
 import subprocess
 import time
 import traceback
 import logging
-from collections import defaultdict, deque
+from collections import OrderedDict, defaultdict, deque
 from typing import Dict, Optional, Tuple
 
 from sklearn.metrics.pairwise import cosine_similarity
@@ -36,6 +38,44 @@ try:
     from scripts.llm_pool import chat, chat_sync, available_models, LLMPoolExhausted
 except ImportError:  # 以脚本方式直接运行时（sys.path[0]=scripts/）
     from llm_pool import chat, chat_sync, available_models, LLMPoolExhausted
+
+# ---------- 决策台账 + @bot 回复限流（纯内存/文件，无网络、无模型） ----------
+try:
+    from scripts import decision_trace as _trace_mod
+    from scripts.decision_trace import (
+        AtReplyLimiter,
+        TraceRecorder,
+        config_identity,
+        resolve_at_reply_policy,
+        SEND_NOT_ATTEMPTED,
+        OUTCOME_SILENT,
+        OUTCOME_CLASSIFIER_ERROR,
+        OUTCOME_GENERATION_EMPTY,
+        OUTCOME_GENERATION_ERROR,
+        OUTCOME_CONTENT_FILTERED,
+        OUTCOME_DEDUPLICATED,
+    )
+except ImportError:  # 以脚本方式直接运行时（sys.path[0]=scripts/）
+    import decision_trace as _trace_mod
+    from decision_trace import (
+        AtReplyLimiter,
+        TraceRecorder,
+        config_identity,
+        resolve_at_reply_policy,
+        SEND_NOT_ATTEMPTED,
+        OUTCOME_SILENT,
+        OUTCOME_CLASSIFIER_ERROR,
+        OUTCOME_GENERATION_EMPTY,
+        OUTCOME_GENERATION_ERROR,
+        OUTCOME_CONTENT_FILTERED,
+        OUTCOME_DEDUPLICATED,
+    )
+
+# 分类器单条推理异常：在"当前决策"的 context 里标记，避免不同群并发时串味。
+# 只记录异常类型/阶段，**不记录异常文本**（异常文本可能带消息正文）。
+_classifier_error_ctx: contextvars.ContextVar = contextvars.ContextVar(
+    "decision_classifier_error", default=None,
+)
 
 # ---------- 联网搜索（借 DSH dsh-free-search 插件的 loopback bridge） ----------
 # 同样是双路兼容导入。**搜索是增强项**：模块缺失/环境缺 httpx 时降级为
@@ -162,13 +202,18 @@ class ReplyResult:
     - text 非空、sticker 为空 → 只发文字（**与接线前完全一致**）
     - text 为空、sticker 非空 → 只发图（本轮跳过了模型调用）
     - 两者都非空             → 先发文字，再补一张图
+
+    ``trace``：本轮决策的台账对象（``decision_trace.DecisionTrace``）。调用方在
+    发送完成后必须调用 ``reply.trace.finish_after_send(attempts)`` 收尾，否则该条
+    台账会在下一次决策时被兜底标成 ``incomplete``（不会静默丢记录）。
     """
 
-    __slots__ = ("text", "sticker")
+    __slots__ = ("text", "sticker", "trace")
 
     def __init__(self, text: str = "", sticker: str = ""):
         self.text = text or ""
         self.sticker = sticker or ""
+        self.trace = None
 
     @property
     def is_sticker_only(self) -> bool:
@@ -189,18 +234,29 @@ class _NoPick:
 # 表情引擎：模块级懒加载单例。构造失败 → 永久 None，功能整体静默关闭。
 _STICKER_ENGINE = None
 _STICKER_TRIED = False
+# 表情选择已移到 worker 线程：多个群可能同时首次进入，构造必须只做一次。
+_STICKER_ENGINE_LOCK = threading.Lock()
+
+# 模型脚本子进程：60s 业务外框 + 清理阶段的有界等待（测试可 patch 这些值）。
+_MODEL_SCRIPT_TIMEOUT = 60.0
+_MODEL_SCRIPT_TERMINATE_GRACE = 2.0
+_MODEL_SCRIPT_KILL_GRACE = 2.0
+_MODEL_SCRIPT_DRAIN_GRACE = 1.0
 
 
 def _get_sticker_engine():
     global _STICKER_ENGINE, _STICKER_TRIED
-    if not _STICKER_TRIED:
-        _STICKER_TRIED = True
-        try:
-            from scripts.sticker import build_default_engine
-            _STICKER_ENGINE = build_default_engine()
-        except Exception:
-            _STICKER_ENGINE = None
-    return _STICKER_ENGINE
+    if _STICKER_ENGINE is not None:
+        return _STICKER_ENGINE
+    with _STICKER_ENGINE_LOCK:
+        if not _STICKER_TRIED:
+            _STICKER_TRIED = True
+            try:
+                from scripts.sticker import build_default_engine
+                _STICKER_ENGINE = build_default_engine()
+            except Exception:
+                _STICKER_ENGINE = None
+        return _STICKER_ENGINE
 
 
 class ContextRingBuffer:
@@ -277,8 +333,17 @@ class DecisionEngine:
         api_base_url: str = "",
         api_model: str = "",
         fallback_api_key: str = "",
+        trace_path: str = None,
     ):
         self.config = self._load_config(config_path)
+        self._config_path = config_path or os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            "config", "decision_rules.json",
+        )
+        # 发布身份：规则文件哈希（与发布清单/实验 snapshot 的 SHA-256 同源）
+        self.rules_version, self.config_sha256 = config_identity(
+            self._config_path, self.config
+        )
         self._contexts: defaultdict[str, ContextRingBuffer] = defaultdict(
             lambda: ContextRingBuffer(max_size=50)
         )
@@ -297,16 +362,37 @@ class DecisionEngine:
         # 并发安全锁
         self._group_locks: dict[str, asyncio.Lock] = {}  # 按群锁（懒创建）
         self._group_locks_guard = asyncio.Lock()          # 保护 _group_locks 字典
-        self._classifier_lock = asyncio.Lock()             # 保护分类器懒加载
+        self._classifier_lock = asyncio.Lock()             # 事件循环侧：避免重复 offload 初始化
+        # 跨线程：懒加载、classify、encode_batch 全部串行（共享 SentenceTransformer
+        # 模型在进程内只能有一个线程进入；RLock 允许 _serialized_classifier_call
+        # 内部再调用 _load_classifier_sync 的双检路径）。
+        self._classifier_run_lock = threading.RLock()
 
         # 内容校验配置（来自 decision_rules.json）
         failover_cfg = self.config.get("failover", {})
         self._content_checks = failover_cfg.get("content_checks", {})
 
-        # 独立脚本路径（与 decision_engine.py 同级目录）
+        # ---------- 独立脚本路径（与 decision_engine.py 同级目录） ----------
         self._script_dir = os.path.dirname(os.path.abspath(__file__))
         self._primary_script = os.path.join(self._script_dir, "model_primary.py")
         self._fallback_script = os.path.join(self._script_dir, "model_fallback.py")
+
+        # ---------- 决策台账（默认关闭；生产由 reverse_bot 显式传入 path 开启） ----------
+        # 只在显式给路径时写文件：避免单测/导入意外在生产 logs/ 下留记录。
+        self.trace_recorder = TraceRecorder(path=trace_path)
+        self._open_traces: "OrderedDict[tuple, _trace_mod.DecisionTrace]" = OrderedDict()
+        self._open_traces_max = 256
+        self._trace_orphan_seconds = 300.0
+
+        # ---------- @bot 回复防滥用（独立安全层，与 proactive 上限互不影响） ----------
+        self._at_reply_limiter = AtReplyLimiter()
+
+        # ---------- 重复 message_id 抑制（进程内；重启/新实例清空） ----------
+        self._seen_message_ids: "OrderedDict[tuple, bool]" = OrderedDict()
+        self._seen_message_ids_max = 1024
+
+        # ---------- 分类器异常计数（进程内；同时写进台账 classifier_error_total） ----------
+        self.classifier_error_count = 0
 
     # ---------- 配置加载 ----------
 
@@ -352,14 +438,38 @@ class DecisionEngine:
     # ---------- 分类器懒加载 ----------
 
     async def _get_classifier(self):
-        """懒加载分类器（并发安全）"""
+        """懒加载分类器（并发安全）。
+
+        导入与构造都是同步重活（sentence_transformers / torch），必须放到线程池，
+        不能占着事件循环。初始化只发生一次：``_classifier_lock`` 收缩事件循环侧
+        的并发 offload，``_classifier_run_lock`` 在 worker 线程里做最终双检，
+        即使持锁任务被取消、线程仍在构造，接续的调用者也不会再构造第二个。
+        """
         if self._classifier is None:
             async with self._classifier_lock:
                 if self._classifier is None:
-                    # 按需导入，避免启动时加载 sentence_transformers + torch（数百 MB）
-                    from scripts.zero_shot_classifier import ZeroShotClassifier
-                    self._classifier = ZeroShotClassifier()
+                    await asyncio.to_thread(self._load_classifier_sync)
         return self._classifier
+
+    def _load_classifier_sync(self):
+        """在 worker 线程内懒导入 + 构造分类器（只在 _classifier_run_lock 内执行）。"""
+        with self._classifier_run_lock:
+            if self._classifier is None:
+                # 按需导入，避免启动时加载 sentence_transformers + torch（数百 MB）
+                from scripts.zero_shot_classifier import ZeroShotClassifier
+                self._classifier = ZeroShotClassifier()
+            return self._classifier
+
+    def _serialized_classifier_call(self, fn, *args, **kwargs):
+        """在 worker 线程内串行执行一次模型操作（classify / encode_batch）。
+
+        多个群共享同一个分类器实例（以及类级共享的 SentenceTransformer 模型），
+        移到线程池后必须显式串行。锁必须在 worker 线程内持有到同步调用结束：
+        若只在事件循环上 ``async with`` 包住 ``to_thread``，任务被取消时锁会提前
+        释放，而线程里的推理仍在跑，下一个群就会与它并发进入同一个模型。
+        """
+        with self._classifier_run_lock:
+            return fn(*args, **kwargs)
 
     # ---------- 人设加载 ----------
 
@@ -1121,6 +1231,7 @@ class DecisionEngine:
         }, ensure_ascii=False)
 
         python_exe = sys.executable or "python"
+        proc = None
         try:
             proc = await asyncio.create_subprocess_exec(
                 python_exe, script_path,
@@ -1130,7 +1241,7 @@ class DecisionEngine:
             )
             stdout, stderr = await asyncio.wait_for(
                 proc.communicate(input=input_data.encode("utf-8")),
-                timeout=60.0,
+                timeout=_MODEL_SCRIPT_TIMEOUT,
             )
             if proc.returncode != 0:
                 stderr_text = stderr.decode("utf-8", errors="replace").strip()
@@ -1151,15 +1262,111 @@ class DecisionEngine:
             result = json.loads(output)
             return (result.get("reply") or "").strip()
 
+        except asyncio.CancelledError:
+            # 取消也必须先回收子进程，再把取消原样传播给调用方。
+            logger.warning("模型脚本 %s 调用被取消，终止并回收子进程",
+                           os.path.basename(script_path))
+            await self._cleanup_model_script_proc(proc, script_path)
+            raise
         except asyncio.TimeoutError:
-            logger.warning("模型脚本 %s 调用超时（>60s）", os.path.basename(script_path))
+            logger.warning("模型脚本 %s 调用超时（>%.0fs），终止并回收子进程",
+                           os.path.basename(script_path), _MODEL_SCRIPT_TIMEOUT)
+            await self._cleanup_model_script_proc(proc, script_path)
             return ""
         except json.JSONDecodeError:
             logger.error("模型脚本 %s 输出不是合法 JSON", os.path.basename(script_path))
             return ""
         except Exception as e:
             logger.error("模型脚本 %s 调用失败: %s", os.path.basename(script_path), e)
+            # 进程可能还活着（例如管道/通信异常）；异常返回前也要回收。
+            if proc is not None and getattr(proc, "returncode", None) is None:
+                await self._cleanup_model_script_proc(proc, script_path)
             return ""
+
+    async def _cleanup_model_script_proc(self, proc, script_path: str) -> None:
+        """有界地终止并回收模型脚本子进程（超时 / 取消 / 通信异常时调用）。
+
+        清理顺序：关闭 stdin → terminate → 有界 wait → 必要时 kill → 有界 wait
+        → 读取残余 stdout/stderr → 关闭管道 transport。所有等待都有上限，
+        清理失败只记日志，不再向调用方抛异常（取消路径除外，由调用方重抛）。
+        """
+        if proc is None:
+            return
+        name = os.path.basename(script_path)
+        try:
+            stdin = getattr(proc, "stdin", None)
+            if stdin is not None:
+                try:
+                    if not getattr(stdin, "is_closing", lambda: False)():
+                        stdin.close()
+                except Exception as exc:  # noqa: BLE001
+                    logger.warning("模型脚本 %s 清理：关闭 stdin 失败: %s", name, exc)
+
+            # 已正常退出的进程不重复 terminate/kill。
+            if getattr(proc, "returncode", None) is None:
+                try:
+                    proc.terminate()
+                except ProcessLookupError:
+                    pass
+                except Exception as exc:  # noqa: BLE001
+                    logger.warning("模型脚本 %s 清理：terminate 失败: %s", name, exc)
+
+                try:
+                    await asyncio.wait_for(
+                        proc.wait(), timeout=_MODEL_SCRIPT_TERMINATE_GRACE
+                    )
+                except asyncio.TimeoutError:
+                    logger.warning(
+                        "模型脚本 %s 清理：terminate 后 %.1fs 未退出，升级 kill",
+                        name, _MODEL_SCRIPT_TERMINATE_GRACE,
+                    )
+                    try:
+                        proc.kill()
+                    except ProcessLookupError:
+                        pass
+                    except Exception as exc:  # noqa: BLE001
+                        logger.warning("模型脚本 %s 清理：kill 失败: %s", name, exc)
+                    try:
+                        await asyncio.wait_for(
+                            proc.wait(), timeout=_MODEL_SCRIPT_KILL_GRACE
+                        )
+                    except asyncio.TimeoutError:
+                        logger.error(
+                            "模型脚本 %s 清理：kill 后 %.1fs 仍未退出，放弃等待",
+                            name, _MODEL_SCRIPT_KILL_GRACE,
+                        )
+                    except Exception as exc:  # noqa: BLE001
+                        logger.warning("模型脚本 %s 清理：kill 后等待退出失败: %s",
+                                       name, exc)
+                except Exception as exc:  # noqa: BLE001
+                    logger.warning("模型脚本 %s 清理：等待退出失败: %s", name, exc)
+
+            # 读取并关闭残余管道，避免 stdout/stderr 有数据未读造成二次阻塞。
+            readers = []
+            for stream in (getattr(proc, "stdout", None), getattr(proc, "stderr", None)):
+                if stream is None:
+                    continue
+                read = getattr(stream, "read", None)
+                if callable(read):
+                    readers.append(read())
+            if readers:
+                try:
+                    await asyncio.wait_for(
+                        asyncio.gather(*readers, return_exceptions=True),
+                        timeout=_MODEL_SCRIPT_DRAIN_GRACE,
+                    )
+                except asyncio.TimeoutError:
+                    logger.warning("模型脚本 %s 清理：读取残余输出超时", name)
+
+            transport = getattr(proc, "_transport", None)
+            if transport is not None:
+                try:
+                    transport.close()
+                except Exception as exc:  # noqa: BLE001
+                    logger.warning("模型脚本 %s 清理：关闭管道失败: %s", name, exc)
+        except Exception as exc:  # noqa: BLE001
+            # 清理失败不能覆盖原本的超时/取消语义，只记录。
+            logger.error("模型脚本 %s 清理异常: %s", name, exc)
 
     # ---------- 故障转移回复生成（子进程隔离） ----------
 
@@ -1298,7 +1505,11 @@ class DecisionEngine:
         recent_texts = [m["content"] for m in all_msgs[-recent_n:]]
 
         try:
-            recent_embs = classifier.encode_batch(recent_texts)
+            # encode_batch 是同步推理（共享模型），放到 worker 线程并串行执行。
+            recent_embs = await asyncio.to_thread(
+                self._serialized_classifier_call,
+                classifier.encode_batch, recent_texts,
+            )
             if len(recent_embs) == 0:
                 return 0
             # 最近窗口的质心向量
@@ -1319,7 +1530,10 @@ class DecisionEngine:
             if len(window_texts) < 2:  # 窗口太小，跳过
                 continue
             try:
-                window_embs = classifier.encode_batch(window_texts)
+                window_embs = await asyncio.to_thread(
+                    self._serialized_classifier_call,
+                    classifier.encode_batch, window_texts,
+                )
                 if len(window_embs) == 0:
                     continue
                 window_centroid = window_embs.mean(axis=0, keepdims=True)
@@ -1418,13 +1632,125 @@ class DecisionEngine:
     # ---------- 分类 ----------
 
     async def _classify_needs_reply(self, text: str) -> Tuple[str, float]:
-        classifier = await self._get_classifier()
+        """零样本分类。**异常时保持 fail-closed（视为不回复）**，但会：
+        - 在当前决策的 contextvar 里标记 ``classifier_error``（含异常类型）；
+        - 增加 ``classifier_error_count`` 计数。
+
+        这两件事让台账能把"分类器异常"与"正常的低置信/沉默"区分开（E 节要求），
+        同时**不改变**任何回复行为。异常文本可能夹带消息正文，因此只保留类型。
+
+        try 范围覆盖"懒加载 + 单条推理"：模型加载失败同样按分类器异常
+        fail-closed 处理并记录（否则会冒泡成决策引擎整体报错）。
+        """
         try:
-            label, score = classifier.classify(text, NEEDS_REPLY_LABELS)
+            classifier = await self._get_classifier()
+            # 模型加载/推理可能长达数十秒，必须在 worker 线程里跑，且与
+            # encode_batch 共用同一把 RLock 串行，避免多群并发进入共享模型。
+            label, score = await asyncio.to_thread(
+                self._serialized_classifier_call,
+                classifier.classify, text, NEEDS_REPLY_LABELS,
+            )
             return label, score
         except Exception as e:
-            print(f"[决策引擎] 分类器调用失败: {e}", file=sys.stderr)
+            self.classifier_error_count += 1
+            _classifier_error_ctx.set({"type": type(e).__name__, "phase": "inference"})
+            print(f"[决策引擎] 分类器调用失败（fail-closed）: {type(e).__name__}",
+                  file=sys.stderr)
             return ("不需要回复", 0.0)
+
+    # ---------- 决策台账 ----------
+
+    def set_trace_recorder(self, recorder) -> None:
+        """替换台账写入器（测试重定向到临时目录；生产由构造参数 trace_path 决定）。"""
+        self.trace_recorder = recorder
+
+    @staticmethod
+    def _active_model_name() -> str:
+        try:
+            return str(DecisionEngine.get_active_model().get("model") or "")
+        except Exception:
+            return ""
+
+    def _classifier_model_name(self) -> str:
+        if self._classifier is None:
+            return ""
+        return str(getattr(self._classifier, "model_name", "") or "")
+
+    def _new_trace(self, gid: str, uid: str, message_id: Optional[str],
+                   is_at_bot: bool, message, now: float):
+        """为一次进入决策链的消息创建台账对象（trace_id 优先 message_id）。"""
+        text_len = len(message) if isinstance(message, str) else 0
+        return self.trace_recorder.new_trace(
+            message_id=message_id,
+            group_id=gid,
+            user_id=uid,
+            is_at_bot=bool(is_at_bot),
+            message_length=text_len,
+            now=now,
+            rules_version=self.rules_version,
+            config_sha256=self.config_sha256,
+            active_model=self._active_model_name(),
+            classifier_model=self._classifier_model_name(),
+            at_reply_policy=resolve_at_reply_policy(self.config, gid),
+        )
+
+    def _sweep_traces(self, now: float) -> None:
+        """清理已收尾的台账；把调用方漏收尾的旧记录兜底标成 incomplete。
+
+        决策回复的台账由 reverse_bot 在发送回执后收尾；若调用方异常/未来重构漏了，
+        这里保证记录不会永远悬空（网关侧不会因此补发任何消息）。
+
+        键用 ``(group_id, trace_id)``：trace_id 优先取 message_id，而 message_id 在
+        不同群之间不保证唯一，只用 trace_id 会互相覆盖未收尾的跟踪项。
+        """
+        for key, trace in list(self._open_traces.items()):
+            if trace.finished:
+                self._open_traces.pop(key, None)
+                continue
+            if now - trace.started_at > self._trace_orphan_seconds:
+                trace.finish_incomplete("调用方未在超时前收尾", now=now)
+                self._open_traces.pop(key, None)
+        while len(self._open_traces) > self._open_traces_max:
+            key, trace = self._open_traces.popitem(last=False)
+            if not trace.finished:
+                trace.finish_incomplete("台账积压被挤出", now=now)
+
+    def _track_open_trace(self, trace) -> None:
+        key = (str(trace.record.get("group_id") or ""), trace.trace_id)
+        self._open_traces[key] = trace
+
+    def _is_duplicate_message(self, gid: str, message_id: Optional[str]) -> bool:
+        """同一 ``(group_id, message_id)`` 只决策一次（进程内，重启清空）。"""
+        if message_id in (None, ""):
+            return False
+        key = (str(gid), str(message_id))
+        if key in self._seen_message_ids:
+            self._seen_message_ids.move_to_end(key)
+            return True
+        self._seen_message_ids[key] = True
+        while len(self._seen_message_ids) > self._seen_message_ids_max:
+            self._seen_message_ids.popitem(last=False)
+        return False
+
+    async def _generate_traced(self, trace, gid: str,
+                               target: Optional[dict],
+                               search_on: bool) -> Tuple[str, str]:
+        """生成回复并记录异常类型（异常 = fail-closed 不回复，不向调用方抛）。
+
+        返回 ``(reply, error_type)``；``error_type`` 非空表示本轮生成异常。
+        取消（CancelledError）不属于业务异常，原样上抛。
+        """
+        try:
+            reply = await self._generate_reply_async(gid, target=target,
+                                                     search_on=search_on)
+            return (reply or ""), ""
+        except asyncio.CancelledError:
+            raise
+        except Exception as e:
+            trace.generation_error = {"type": type(e).__name__, "phase": "generation"}
+            logger.error("[生成] 回复生成异常（fail-closed，不回复）: %s",
+                         type(e).__name__)
+            return "", type(e).__name__
 
     # ---------- 前置过滤器 ----------
 
@@ -1505,6 +1831,7 @@ class DecisionEngine:
         sender_nickname: str = "",
         search_on: bool = False,
         sticker_on: bool = False,
+        message_id: Optional[str] = None,
     ) -> Tuple[bool, Optional["ReplyResult"]]:
         """
         判断是否应回复并生成回复内容。
@@ -1514,6 +1841,10 @@ class DecisionEngine:
         与该群其它功能位同源）。默认 False = 不搜（fail-closed，行为与接线前一致）。
         参数 sticker_on：本群表情包功能位是否开启，同样由调用方传入。
         默认 False = 不发表情（fail-closed，此时行为与接线前**完全一致**）。
+        参数 message_id：OneBot message_id（可选）。只用于两件事：
+          - 决策台账 trace_id（缺失时用随机 UUID，不含消息正文）；
+          - 进程内重复投递抑制（同一 ``(gid, message_id)`` 只决策一次）。
+          不传时行为与接线前一致（不抑制、trace 用 UUID）。
         """
         gid = str(group_id)
 
@@ -1522,7 +1853,7 @@ class DecisionEngine:
         async with g_lock:
             return await self._should_reply_locked(
                 message, user_id, group_id, is_at_bot, sender_nickname, search_on,
-                sticker_on,
+                sticker_on, message_id,
             )
 
     async def _should_reply_locked(
@@ -1534,100 +1865,186 @@ class DecisionEngine:
         sender_nickname: str = "",
         search_on: bool = False,
         sticker_on: bool = False,
+        message_id: Optional[str] = None,
     ) -> Tuple[bool, Optional["ReplyResult"]]:
-        """should_reply 的内部实现，调用方必须持有 _group_locks[gid]"""
+        """should_reply 的内部实现，调用方必须持有 _group_locks[gid]
+
+        每次决策都会生成一份台账（``decision_trace.v1``）：闸门 → 分类 → 阈值 →
+        生成 → 过滤/去重 → 发送。静默/异常结局在本方法内收尾；真正要发送的结局
+        把 trace 挂在 ``ReplyResult.trace`` 上，由调用方在收到 OneBot **回执**后
+        调 ``finish_after_send`` 收尾（websocket 写成功 ≠ 发送成功）。
+        """
         self._debug_info = {}
         t_start = time.time()
         gid = str(group_id)
+        uid = str(user_id)
+
+        # 先给漏收尾的旧台账兜底（只写台账，绝不补发任何消息）
+        self._sweep_traces(t_start)
 
         # 确保上下文存在
         if gid not in self._contexts:
             self._contexts[gid] = ContextRingBuffer(max_size=50)
 
+        # ===== 重复 message_id 抑制（同一消息只决策/发送一次；进程内，重启清空）=====
+        if self._is_duplicate_message(gid, message_id):
+            logger.info("[决策] 重复 message_id 已抑制 mid=%s 群=%s", message_id, gid)
+            self._debug("去重消息", f"重复 message_id({message_id})，跳过")
+            return (False, None)
+
+        # ===== 台账（trace_id 优先 message_id，缺失时随机 UUID）=====
+        trace = self._new_trace(gid, uid, message_id, is_at_bot, message, t_start)
+
+        def _silent(outcome: str = OUTCOME_SILENT):
+            """本次决策不发送任何内容：当场收尾台账（send_status=not_attempted）。"""
+            trace.send_status = SEND_NOT_ATTEMPTED
+            trace.mark_decision_done(time.time())
+            trace.finish(final_outcome=outcome, send_status=SEND_NOT_ATTEMPTED)
+            self._debug("耗时_ms", str(int((time.time() - t_start) * 1000)))
+            return (False, None)
+
+        def _reply(text: str, sticker: str):
+            """本次决策要发送：把 trace 交给调用方，等回执后再写台账。"""
+            trace.mark_decision_done(time.time())
+            result = ReplyResult(text=text, sticker=sticker)
+            result.trace = trace
+            self._track_open_trace(trace)
+            self._debug("耗时_ms", str(int((time.time() - t_start) * 1000)))
+            return (True, result)
+
         # ===== @bot 强制回复（唯一硬规则，前置过滤之前判断） =====
         if is_at_bot:
             self._debug("决策", "@bot 强制回复")
+            trace.stage("at_bot", True, "强制回复（绕过冷却与 proactive 上限）")
+
+            # ===== @bot 独立防滥用限流（每 gid+uid；在表情检索/模型生成之前阻断）=====
+            policy = resolve_at_reply_policy(self.config, gid)
+            trace.at_reply_policy = policy
+            allowed, rate_reason, snapshot = self._at_reply_limiter.acquire(
+                gid, uid, t_start, policy)
+            if not allowed:
+                trace.stage("at_rate_limited", False, rate_reason, **snapshot)
+                self._debug("限流", f"@回复超限（{rate_reason}）")
+                return _silent(OUTCOME_SILENT)
+            trace.stage("at_reply_limit", True, "", **snapshot)
+            # 通过限流即视为"规则希望发言"（即使随后生成失败）
+            trace.policy_intent = True
 
             # ===== 表情步（本地检索，零 API 调用）=====
             # 放在生成文字之前：strong 档可以直接出图，完全跳过模型调用。
-            pick = self._pick_sticker(gid, message, sticker_on)
+            # 完整选择（含 sticker 模块懒加载 / 共享模型编码）在 worker 线程执行。
+            pick = await self._pick_sticker(gid, message, sticker_on)
             if pick.level == _LEVEL_STRONG:
                 self._debug("表情", f"strong 只发图（{os.path.basename(pick.path)}）")
+                trace.content_kind = "sticker"
+                trace.sticker_only = True
+                trace.reached_generation = False
+                trace.stage("sticker", True, "strong（只发图，跳过生成）")
                 self._record_reply(gid, "")          # 纯图同样要吃冷却，否则会连发
-                self._debug("耗时_ms", str(int((time.time() - t_start) * 1000)))
-                return (True, ReplyResult(text="", sticker=pick.path))
+                return _reply("", pick.path)
             if pick.level != _LEVEL_NONE:
                 self._debug("表情", f"{pick.level} 文字+图（{os.path.basename(pick.path)}）")
+                trace.stage("sticker", True, f"{pick.level}（文字+图）")
+            else:
+                trace.stage("sticker", True, "none")
 
             # 定向回复：本轮要回应的就是这条 @bot 的消息
             target = self._build_target(message, user_id, sender_nickname)
             self._debug("回应目标",
                         f"{target['nickname'] or '?'}({target['uid']})" if target else "无（回落旧 prompt）")
-            reply = await self._generate_reply_async(gid, target=target,
-                                                     search_on=search_on)
+            trace.reached_generation = True
+            reply, gen_error = await self._generate_traced(trace, gid, target, search_on)
+            if gen_error:
+                trace.stage("generation", False, gen_error)
+                self._debug("回复", f"生成异常({gen_error})")
+                return _silent(OUTCOME_GENERATION_ERROR)
             if not reply:
+                trace.generation_empty = True
+                trace.stage("generation", False, "empty")
                 self._debug("回复", "API 返回空")
-                self._debug("耗时_ms", str(int((time.time() - t_start) * 1000)))
-                return (False, None)
+                return _silent(OUTCOME_GENERATION_EMPTY)
             if not self._content_filter(reply):
+                trace.content_filtered = True
+                trace.stage("content_filter", False, "sensitive")
                 self._debug("安全过滤", "内容包含敏感词，跳过")
-                self._debug("耗时_ms", str(int((time.time() - t_start) * 1000)))
-                return (False, None)
+                return _silent(OUTCOME_CONTENT_FILTERED)
+            trace.stage("content_filter", True, "")
             # 精确去重
             last = self._last_reply.get(gid, "")
             if reply == last:
+                trace.deduplicated = True
+                trace.dedupe_kind = "exact"
+                trace.stage("dedupe_exact", False, "与上次回复完全相同")
                 self._debug("去重", "与上次回复完全相同，跳过")
-                self._debug("耗时_ms", str(int((time.time() - t_start) * 1000)))
-                return (False, None)
+                return _silent(OUTCOME_DEDUPLICATED)
+            trace.stage("dedupe_exact", True, "")
+            trace.generation_ok = True
+            trace.content_kind = ("text+sticker" if pick.level != _LEVEL_NONE else "text")
+            trace.stage("generation", True, f"chars={len(reply)}")
             self._record_reply(gid, reply)
-            self._debug("耗时_ms", str(int((time.time() - t_start) * 1000)))
-            return (True, ReplyResult(
-                text=reply,
-                sticker=pick.path if pick.level != _LEVEL_NONE else ""))
+            return _reply(reply, pick.path if pick.level != _LEVEL_NONE else "")
 
         # ===== 前置过滤器（@bot 已处理，此处仅过滤非 @bot 消息）=====
+        trace.stage("at_bot", True, "非 @bot，走主动接话路径")
         skip_reason = self._pre_filter(message)
         if skip_reason:
+            trace.stage("prefilter", False, skip_reason)
             self._debug("跳过", skip_reason)
-            self._debug("耗时_ms", str(int((time.time() - t_start) * 1000)))
-            return (False, None)
+            return _silent()
+        trace.stage("prefilter", True, "")
 
         # ===== 冷却检查 =====
         cooldown = self.config.get("reply_cooldown_seconds", self.COOLDOWN_SECONDS)
         last_time = self._last_reply_time.get(gid, 0)
-        elapsed = time.time() - last_time
+        elapsed = t_start - last_time
         if elapsed < cooldown:
+            trace.stage("cooldown", False, f"距上次 {elapsed:.1f}s < {cooldown:.0f}s")
             self._debug("冷却", f"距上次回复仅{elapsed:.1f}s（需{cooldown:.0f}s），跳过")
-            self._debug("耗时_ms", str(int((time.time() - t_start) * 1000)))
-            return (False, None)
+            return _silent()
+        trace.stage("cooldown", True, "")
 
         # ===== 主动发言限流（每小时硬上限，按群独立计数）=====
         # 位置关键：本闸门位于 @bot 硬规则之后，所以 **@bot / 别名回复永远不受限流影响**。
-        # cap<=0 视为不限制（回退开关）。
+        # cap<=0 视为不限制（回退开关）。@bot 另有独立 at_reply 限流，两者不混用。
         cap = self.config.get("proactive_max_per_hour", 5)
         window = self.config.get("proactive_window_seconds", 3600)
-        if cap > 0:
-            used = self._proactive_count_within(gid, window)
-            if used >= cap:
-                self._debug("限流", f"主动发言已达 {used}/{cap} 次每 {int(window)}s，跳过")
-                self._debug("耗时_ms", str(int((time.time() - t_start) * 1000)))
-                return (False, None)
+        used = self._proactive_count_within(gid, window)
+        if cap > 0 and used >= cap:
+            trace.stage("proactive_cap", False, f"{used}/{cap} per {int(window)}s")
+            self._debug("限流", f"主动发言已达 {used}/{cap} 次每 {int(window)}s，跳过")
+            return _silent()
+        trace.stage("proactive_cap", True, "" if cap <= 0 else f"{used}/{cap}")
 
         # ===== 密度检查 =====
         density = self._get_density(gid)
         self._debug("密度", f"{density:.2f} 条/分钟")
         max_skip = self.config.get("max_density_skip", 15)
         if density > max_skip:
+            trace.stage("density", False, f"{density:.2f} > {max_skip}")
             self._debug("跳过", f"密度过高 ({density:.1f} > {max_skip})")
-            self._debug("耗时_ms", str(int((time.time() - t_start) * 1000)))
-            return (False, None)
+            return _silent()
+        trace.stage("density", True, f"{density:.2f} 条/分钟")
 
         # ===== 零样本分类 =====
+        _classifier_error_ctx.set(None)
         label, score = await self._classify_needs_reply(message)
+        classifier_error = _classifier_error_ctx.get()
+        trace.classifier_label = label
+        trace.classifier_score = score
+        trace.classifier_error_total = int(self.classifier_error_count)
+        if classifier_error:
+            trace.classifier_error = dict(classifier_error)
+            trace.stage("classifier_error", False,
+                        str(classifier_error.get("type") or "unknown"))
+            self._debug("分类结果", f"分类器异常（{classifier_error.get('type')}）")
+            # fail-closed：异常一律不回复；单独结局，**不计入** classifier_low_confidence
+            return _silent(OUTCOME_CLASSIFIER_ERROR)
+        trace.stage("classifier", True, f"{label} {score:.4f}")
         self._debug("分类结果", f"{label} ({score:.4f})")
 
         # ===== 动态阈值 =====
         threshold = self._get_dynamic_threshold(density)
+        trace.dynamic_threshold = threshold
         self._debug("阈值", f"{threshold:.4f}")
 
         # ===== 分类器降级逻辑 =====
@@ -1638,28 +2055,41 @@ class DecisionEngine:
             if density > high_density:
                 self._debug("降级决策", f"密度{density:.1f}>{high_density}，回复")
             else:
+                trace.stage(
+                    "classifier_low_confidence", False,
+                    f"score={score:.4f}<{fallback_threshold} "
+                    f"density={density:.2f}<={high_density}")
                 self._debug("降级决策", f"密度{density:.1f}<={high_density}，不回复")
-                self._debug("耗时_ms", str(int((time.time() - t_start) * 1000)))
-                return (False, None)
+                return _silent()
 
         # ===== 阈值判断 =====
         if label != "需要回复" or score < threshold:
+            reason = (f"label={label} score={score:.4f}<{threshold:.4f}"
+                      if score < threshold else f"label={label}")
+            trace.stage("threshold", False, reason)
             self._debug("最终", f"不回复 (label={label}, score={score:.4f} < {threshold:.4f})")
-            self._debug("耗时_ms", str(int((time.time() - t_start) * 1000)))
-            return (False, None)
-
+            return _silent()
+        trace.stage("threshold", True, f"label={label} score={score:.4f}>={threshold:.4f}")
         self._debug("最终", f"回复 (label={label}, score={score:.4f})")
+        trace.policy_intent = True
 
         # ===== 表情步（本地检索，零 API 调用）=====
-        pick = self._pick_sticker(gid, message, sticker_on)
+        # 与 @bot 路径相同：整体移出事件循环，避免首次加载/共享模型锁等待阻塞群聊。
+        pick = await self._pick_sticker(gid, message, sticker_on)
         if pick.level == _LEVEL_STRONG:
             # 只发图：本轮完全跳过模型调用（当前网关下单次要走 66~126s）
             self._debug("表情", f"strong 只发图（{os.path.basename(pick.path)}）")
+            trace.content_kind = "sticker"
+            trace.sticker_only = True
+            trace.reached_generation = False
+            trace.stage("sticker", True, "strong（只发图，跳过生成）")
             self._record_reply(gid, "")
-            self._debug("耗时_ms", str(int((time.time() - t_start) * 1000)))
-            return (True, ReplyResult(text="", sticker=pick.path))
+            return _reply("", pick.path)
         if pick.level != _LEVEL_NONE:
             self._debug("表情", f"{pick.level} 文字+图（{os.path.basename(pick.path)}）")
+            trace.stage("sticker", True, f"{pick.level}（文字+图）")
+        else:
+            trace.stage("sticker", True, "none")
 
         # ===== 生成回复 =====
         # 定向回复：非 @ 路径同样把"刚触发了回复的这条消息"作为回应对象，
@@ -1669,40 +2099,54 @@ class DecisionEngine:
                     f"{target['nickname'] or '?'}({target['uid']})" if target else "无（回落旧 prompt）")
         # 自主接话路径：search_on 恒为调用方传入的值（reverse_bot 只在 bot_mentioned
         # 时为真），因此"自动搜索只在 @bot/别名命中时发生"由调用方保证。
-        reply = await self._generate_reply_async(gid, target=target,
-                                                 search_on=search_on)
+        trace.reached_generation = True
+        reply, gen_error = await self._generate_traced(trace, gid, target, search_on)
+        if gen_error:
+            trace.stage("generation", False, gen_error)
+            self._debug("回复", f"生成异常({gen_error})")
+            return _silent(OUTCOME_GENERATION_ERROR)
         if not reply:
+            trace.generation_empty = True
+            trace.stage("generation", False, "empty")
             self._debug("回复", "API 返回空")
-            self._debug("耗时_ms", str(int((time.time() - t_start) * 1000)))
-            return (False, None)
+            return _silent(OUTCOME_GENERATION_EMPTY)
+        trace.stage("generation", True, f"chars={len(reply)}")
 
         # ===== 内容安全过滤 =====
         if not self._content_filter(reply):
+            trace.content_filtered = True
+            trace.stage("content_filter", False, "sensitive")
             self._debug("安全过滤", "内容包含敏感词，跳过")
-            self._debug("耗时_ms", str(int((time.time() - t_start) * 1000)))
-            return (False, None)
+            return _silent(OUTCOME_CONTENT_FILTERED)
+        trace.stage("content_filter", True, "")
 
         # ===== 精确去重 =====
         last = self._last_reply.get(gid, "")
         if reply == last:
+            trace.deduplicated = True
+            trace.dedupe_kind = "exact"
+            trace.stage("dedupe_exact", False, "与上次回复完全相同")
             self._debug("去重", "与上次回复完全相同，跳过")
-            self._debug("耗时_ms", str(int((time.time() - t_start) * 1000)))
-            return (False, None)
+            return _silent(OUTCOME_DEDUPLICATED)
+        trace.stage("dedupe_exact", True, "")
 
         # ===== 相似度去重（与最近 N 条回复比较） =====
         recent = self._recent_replies.get(gid, deque(maxlen=self.SIMILARITY_WINDOW))
         for old_reply in recent:
             ratio = difflib.SequenceMatcher(None, reply, old_reply).ratio()
             if ratio > self.SIMILARITY_THRESHOLD:
+                trace.deduplicated = True
+                trace.dedupe_kind = "similar"
+                trace.stage("dedupe_similar", False,
+                            f"{ratio:.2f} > {self.SIMILARITY_THRESHOLD}")
                 self._debug("去重", f"相似度过高 ({ratio:.2f} > {self.SIMILARITY_THRESHOLD})，跳过")
-                self._debug("耗时_ms", str(int((time.time() - t_start) * 1000)))
-                return (False, None)
+                return _silent(OUTCOME_DEDUPLICATED)
+        trace.stage("dedupe_similar", True, "")
 
+        trace.generation_ok = True
+        trace.content_kind = ("text+sticker" if pick.level != _LEVEL_NONE else "text")
         self._record_reply(gid, reply)
-        self._debug("耗时_ms", str(int((time.time() - t_start) * 1000)))
-        return (True, ReplyResult(
-            text=reply,
-            sticker=pick.path if pick.level != _LEVEL_NONE else ""))
+        return _reply(reply, pick.path if pick.level != _LEVEL_NONE else "")
 
     def _proactive_count_within(self, gid: str, window: float) -> int:
         """返回该群过去 window 秒内的主动发言次数（滚动窗口，顺带清理过期记录）。"""
@@ -1727,18 +2171,30 @@ class DecisionEngine:
             self._last_reply[gid] = reply
             self._recent_replies[gid].append(reply)
 
-    def _pick_sticker(self, gid: str, message: str, sticker_on: bool):
-        """本地表情检索（零 API 调用）。
+    async def _pick_sticker(self, gid: str, message: str, sticker_on: bool):
+        """异步入口：完整表情选择（含引擎懒加载、共享模型编码、锁等待）在 worker 线程。
 
-        任何异常、任何不可用（功能位关 / 引擎构造失败 / 索引坏 / 图库空）
-        一律返回 none 形状的兜底对象，**绝不影响文字链**。
+        `sticker_on=False` 在事件循环内直接快速返回，不占用线程池；任何异常
+        一律返回 none 形状的兜底对象，绝不影响文字链。
         """
         if not sticker_on:
             return _NoPick()
-        engine = _get_sticker_engine()
-        if engine is None:
-            return _NoPick()
         try:
+            return await asyncio.to_thread(self._pick_sticker_sync, gid, message)
+        except Exception:
+            return _NoPick()
+
+    def _pick_sticker_sync(self, gid: str, message: str):
+        """同步表情检索本体（只在 worker 线程执行）。
+
+        包含 `_get_sticker_engine()`（首次会导入并构造 StickerEngine）与
+        `engine.pick()`；后者可能进入 `get_classifier().encode_batch()`，
+        因此不能留在事件循环线程。任何异常、任何不可用一律返回 `_NoPick()`。
+        """
+        try:
+            engine = _get_sticker_engine()
+            if engine is None:
+                return _NoPick()
             return engine.pick(gid, message, True)
         except Exception:
             return _NoPick()

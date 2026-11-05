@@ -44,6 +44,9 @@ async def _get_plus_one_lock(gid: str) -> asyncio.Lock:
 # ========== 发言决策引擎 ==========
 from scripts.decision_engine import DecisionEngine
 
+# ========== 决策回复回执（echo）：只覆盖 DecisionEngine 的文字/图片回复 ==========
+from scripts.decision_receipt import DecisionSendReceipt
+
 # ========== 用户画像 ==========
 from scripts.user_profile import (
     PROFILE_ENABLED, load_profiles, record_message, get_profile, update_profiles,
@@ -167,14 +170,47 @@ DECISION_API_KEY = os.getenv("DECISION_API_KEY", "")
 DECISION_API_BASE = "http://127.0.0.1:8090/v1"
 
 # ========== 发言决策引擎 ==========
+# 决策台账：只有显式给路径才启用（避免任何"顺手"的生产记录）。
+# 生产默认 logs/decision_trace.jsonl；演练可用 DECISION_TRACE_PATH 重定向，
+# DECISION_TRACE_DISABLED=1 强制关闭。测试必须重定向到临时目录。
+_DECISION_TRACE_PATH = (
+    os.environ.get("DECISION_TRACE_PATH")
+    or os.path.join(LOG_DIR, "decision_trace.jsonl")
+)
 decision_engine = DecisionEngine(
     api_key=DECISION_API_KEY,
     api_base_url=DECISION_API_BASE,
     api_model="deepseek-flash",
     fallback_api_key=DEEPSEEK_API_KEY,
+    trace_path=_DECISION_TRACE_PATH,
 )
 
 set_fallback_api_key(DEEPSEEK_API_KEY)
+
+# ========== 决策回复回执（echo） ==========
+# 语义：ok = OneBot 明确成功；failed = 明确失败；unknown = 超时/断连/写入异常，
+# **unknown 绝不自动重发**。只有 DecisionEngine 回复走这里；指令/+1/新人欢迎/
+# 神秘数字等发送路径仍是 legacy（无回执）。
+_DEFAULT_SEND_RECEIPT_TIMEOUT = 10.0
+
+
+def _decision_receipt_timeout() -> float:
+    """回执超时（秒）：decision_rules.json 可选键 > 环境变量 > 默认 10s。"""
+    raw = None
+    try:
+        raw = decision_engine.config.get("send_receipt_timeout_seconds")
+    except Exception:
+        raw = None
+    if raw is None:
+        raw = os.environ.get("DECISION_RECEIPT_TIMEOUT_SECONDS")
+    try:
+        value = float(raw)
+    except (TypeError, ValueError):
+        return _DEFAULT_SEND_RECEIPT_TIMEOUT
+    return value if value > 0 else _DEFAULT_SEND_RECEIPT_TIMEOUT
+
+
+decision_sender = DecisionSendReceipt(timeout=_decision_receipt_timeout())
 
 # 群聊历史缓存
 group_histories = defaultdict(lambda: deque(maxlen=50))
@@ -317,11 +353,13 @@ async def _describe_triggered_image(gid_str: str, message_images: list, raw_mess
             bot_logger.info(f"[识图] 跳过（同图去重：{tag}）")
             continue
         # 闸门 3：直链可能已过期（rkey 时效）→ fetch_image 返回 None，静默降级
-        img_bytes = image_utils.fetch_image(meta)
+        # 同步 httpx 下载必须移出事件循环：否则一张图会卡住所有群消息与 WS 心跳。
+        img_bytes = await asyncio.to_thread(image_utils.fetch_image, meta)
         if not img_bytes:
             bot_logger.info(f"[识图] 跳过（下载失败/直链过期：{tag}）")
             continue
-        data_url = image_utils.to_data_url(img_bytes)
+        # Pillow 解码/缩放/JPEG 编码/base64 同样是同步 CPU 操作，一并放到线程池。
+        data_url = await asyncio.to_thread(image_utils.to_data_url, img_bytes)
         if not data_url:
             bot_logger.info(f"[识图] 跳过（图片解码失败：{tag}）")
             continue
@@ -509,6 +547,8 @@ async def handle_message(websocket, data: dict):
                 # 表情包：仅在本群开启 sticker 功能位时才让它参与判断。
                 # 功能位默认 false（白名单语义），所以接线本身不会让任何群上线。
                 sticker_on=_feature_on(gid_str, "sticker"),
+                # OneBot message_id：用于台账 trace_id 和进程内重复投递抑制
+                message_id=msg_id,
             )
 
             elapsed_ms = int((time.time() - t_decision) * 1000)
@@ -517,19 +557,39 @@ async def handle_message(websocket, data: dict):
 
             if should_reply and reply:
                 at_user = uid_str if bot_mentioned else None
-                # 纯图回复不带 at —— 表情包本来就是「不说话」的替代
+                # 决策回复走 echo 回执：send_status=ok 只认 OneBot 明确成功；
+                # unknown（超时/断连/写入异常）不自动重发。纯图回复不带 at ——
+                # 表情包本来就是「不说话」的替代。
+                sent_attempts = []
                 if reply.text:
-                    await send_message(websocket, group_id, reply.text, at_user=at_user)
+                    text_outcome = await decision_sender.send_text(
+                        websocket, group_id, reply.text, at_user=at_user)
+                    sent_attempts.append(("text", text_outcome))
+                    if not text_outcome.ok:
+                        bot_logger.info(
+                            f"[回执] 群 {gid_str} 文字发送未确认"
+                            f"（status={text_outcome.status}，kind={text_outcome.error_kind}）")
                 if reply.sticker:
                     sub_type = _sticker_send_sub_type()
+                    image_outcome = await decision_sender.send_image(
+                        websocket, group_id, reply.sticker, sub_type=sub_type)
+                    sent_attempts.append(("sticker", image_outcome))
+                    if image_outcome.ok:
+                        bot_logger.info(
+                            f"[表情] 群 {gid_str} 发出表情"
+                            f"（sub_type={sub_type}，1=贴图/0=普通图片）")
+                    else:
+                        # 发图失败/未知绝不能影响已经发出去的文字
+                        bot_logger.info(
+                            f"[表情] 发送未确认（status={image_outcome.status}，"
+                            f"kind={image_outcome.error_kind}，不影响文字）")
+                # 台账收尾：必须在发送回执后写，否则无法区分 ok/failed/unknown
+                trace = getattr(reply, "trace", None)
+                if trace is not None:
                     try:
-                        await send_group_image(websocket, group_id, reply.sticker,
-                                               sub_type=sub_type)
-                        bot_logger.info(f"[表情] 群 {gid_str} 发出 {os.path.basename(reply.sticker)}"
-                                        f"（sub_type={sub_type}，1=贴图/0=普通图片）")
+                        trace.finish_after_send(sent_attempts)
                     except Exception as e:
-                        # 发图失败绝不能影响已经发出去的文字
-                        bot_logger.info(f"[表情] 发送失败（已忽略，不影响文字）: {e}")
+                        bot_logger.info(f"[决策台账] 收尾失败（已忽略）: {type(e).__name__}")
                 total_ms = int((time.time() - t_req) * 1000)
                 form = ("文字+图" if (reply.text and reply.sticker)
                         else ("只发图" if reply.sticker else "只发文字"))
@@ -671,6 +731,8 @@ async def handler(websocket, *args):
                     continue
                 if interaction_menus.rpc.resolve(websocket, data):   # 回执拦截，必须早于 post_type 路由
                     continue
+                if decision_sender.resolve(websocket, data):          # 决策回复回执，同样必须早于 post_type 路由
+                    continue
                 post_type = data.get("post_type")
                 if post_type == "message":
                     if data.get("message_type") == "group":
@@ -699,6 +761,7 @@ async def handler(websocket, *args):
         bot_logger.info("")
     finally:
         interaction_menus.disconnect(websocket)          # M2：每个连接都要清自己的状态
+        decision_sender.disconnect(websocket)             # 未完成的决策回复回执 → unknown（不重发）
         if current_websocket is websocket:               # M2：只有"当前连接"才允许清全局
             current_websocket = None
             set_napcat_connected(False)

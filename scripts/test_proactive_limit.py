@@ -52,7 +52,10 @@ class ProactiveLimitTest(unittest.TestCase):
             return "回答" + uuid.uuid4().hex
         self.engine._classify_needs_reply = _cls
         self.engine._generate_reply_async = _gen
-        self.engine._pick_sticker = lambda *a, **k: de._NoPick()
+        async def _no_pick(*args, **kwargs):
+            return de._NoPick()
+
+        self.engine._pick_sticker = _no_pick
         self.engine._get_density = lambda gid: 5.0     # 中间密度，避开密度跳过
         self.engine._pre_filter = lambda msg: None
 
