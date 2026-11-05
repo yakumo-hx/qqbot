@@ -1,0 +1,491 @@
+{
+  "manifest_version": "decision_canary_manifest.v1",
+  "task": "群聊决策架构上线前准备（灰度前工程准备 + 离线测试 + 灰度方案）",
+  "status": "prepared_awaiting_user_restart",
+  "canary_scope": {
+    "mode": "all_whitelist_groups",
+    "groups": ["1102194840", "284517232", "1055881417"],
+    "focus_group_id": "1102194840",
+    "user_confirmed": true,
+    "production_config_changed_for_scope": false,
+    "all_three_decision_engine_true": true,
+    "restart_required": true,
+    "restart_executed": false
+  },
+  "declaration": "本清单只描述发布准备状态：尚未进行真实上线验证，未发送任何真实 QQ 消息，未连接生产 OneBot WS，未调用真实生成模型，未启动/停止/重启任何机器人进程，未修改 config/ 下任何生产配置。",
+  "generated_at": "2026-11-04T21:27:03+08:00",
+  "git": {
+    "head": "6ad6b325623ffdc7f2863e293007e8b223bf6407",
+    "branch": "main",
+    "head_commit_date": "2026-11-04T13:19:30+08:00",
+    "head_subject": "feat(private): dedicated private-chat character and persona refinements",
+    "work_tree_at_task_start": "clean（git status --porcelain 无输出）",
+    "work_tree_after_task": [
+      " M reverse_bot.py",
+      " M scripts/decision_engine.py",
+      "?? language_lab/release/",
+      "?? scripts/decision_receipt.py",
+      "?? scripts/decision_trace.py",
+      "?? scripts/test_decision_release.py"
+    ],
+    "note": "本任务按约束不执行 git add/commit/push；工作树改动即交付物本体。生成清单用的临时核查脚本 _gen_manifest.py / _verify_release_readonly.py 已删除，不计入交付。"
+  },
+  "baseline": {
+    "note": "本任务开始前的生产基线；其中 reverse_bot.py / decision_engine.py / decision_rules.json / group_features.json 与离线实验 decision_replay_20261103 的 snapshot 逐字节一致",
+    "files": [
+      {
+        "path": "reverse_bot.py",
+        "role": "QQ 群机器人入口（OneBot 反向 WS 服务端）",
+        "sha256": "433b2004911139c7566f54a518e168c2a1f82349d3ed4fe98efcfa37c6ae1d66",
+        "size_bytes": 34434,
+        "source": "experiment_snapshot（与任务开始前生产文件逐字节一致）",
+        "matches_experiment_snapshot": true,
+        "current_sha256": "2012663a18b64555420af0f1a3e96075120f3d9978fc7e7b890eafdf1eecd446",
+        "changed_by_task": true
+      },
+      {
+        "path": "scripts/decision_engine.py",
+        "role": "发言决策引擎",
+        "sha256": "8331cd4d6ffccf42b51ce021bc62f142f6670abccf30b13a23959d36e59acfde",
+        "size_bytes": 80060,
+        "source": "experiment_snapshot（与任务开始前生产文件逐字节一致）",
+        "matches_experiment_snapshot": true,
+        "current_sha256": "561ab312725ac620b81e70c0fd03645e7a58ee3c2ff532aaed8ae2aed534be6a",
+        "changed_by_task": true
+      },
+      {
+        "path": "config/decision_rules.json",
+        "role": "决策规则（生产配置，本任务未改）",
+        "sha256": "aa9354a50565a1a88ae0ea410620839fc19299e9b94aca6476eb4013d4b74d90",
+        "size_bytes": 1776,
+        "source": "experiment_snapshot（与任务开始前生产文件逐字节一致）",
+        "matches_experiment_snapshot": true,
+        "current_sha256": "aa9354a50565a1a88ae0ea410620839fc19299e9b94aca6476eb4013d4b74d90",
+        "changed_by_task": false
+      },
+      {
+        "path": "config/group_features.json",
+        "role": "群功能位白名单（生产配置，本任务未改）",
+        "sha256": "a832e006afe85a78b6f65bc1a180c6d472e622d8183c1a1bbd0051ca5bfdb27b",
+        "size_bytes": 1002,
+        "source": "experiment_snapshot（与任务开始前生产文件逐字节一致）",
+        "matches_experiment_snapshot": true,
+        "current_sha256": "a832e006afe85a78b6f65bc1a180c6d472e622d8183c1a1bbd0051ca5bfdb27b",
+        "changed_by_task": false
+      },
+      {
+        "path": "config/active_model.json",
+        "role": "当前生成模型（生产配置，本任务未改）",
+        "sha256": "267cb5f413ea57a83bf6aa384621640560b5b16e5316574f425e7597f13f2094",
+        "size_bytes": 32,
+        "source": "experiment_snapshot（与任务开始前生产文件逐字节一致）",
+        "matches_experiment_snapshot": true,
+        "current_sha256": "267cb5f413ea57a83bf6aa384621640560b5b16e5316574f425e7597f13f2094",
+        "changed_by_task": false
+      },
+      {
+        "path": "config/model_pool.json",
+        "role": "模型池（生产配置，本任务未改）",
+        "sha256": "f8cb7537c931949b24030eb1b42603fda85c17520a46d23764941ea8a6808697",
+        "size_bytes": 701,
+        "source": "experiment_snapshot（与任务开始前生产文件逐字节一致）",
+        "matches_experiment_snapshot": true,
+        "current_sha256": "f8cb7537c931949b24030eb1b42603fda85c17520a46d23764941ea8a6808697",
+        "changed_by_task": false
+      },
+      {
+        "path": "scripts/zero_shot_classifier.py",
+        "role": "零样本分类器实现（未改）",
+        "sha256": "0668ad012360c428db516e4e77b8ca5de857e0029947502ecd40024c92ed3b16",
+        "size_bytes": 9652,
+        "source": "experiment_snapshot（与任务开始前生产文件逐字节一致）",
+        "matches_experiment_snapshot": true,
+        "current_sha256": "0668ad012360c428db516e4e77b8ca5de857e0029947502ecd40024c92ed3b16",
+        "changed_by_task": false
+      },
+      {
+        "path": "scripts/interaction_menu.py",
+        "role": "互动菜单 echo RPC（参考实现，未改）",
+        "sha256": "5d1e7321967baf47bcbd993fdd02101cdade9892fb1c0bd206cc5b5f19a60850",
+        "size_bytes": 17608,
+        "source": "experiment_snapshot（与任务开始前生产文件逐字节一致）",
+        "matches_experiment_snapshot": true,
+        "current_sha256": "5d1e7321967baf47bcbd993fdd02101cdade9892fb1c0bd206cc5b5f19a60850",
+        "changed_by_task": false
+      },
+      {
+        "path": "scripts/private_chat/rpc.py",
+        "role": "私聊 echo RPC（仅作设计参考，未引入运行时）",
+        "sha256": "fd23ac395194924d0d44d926f1c5cdb654a80733458ee14fb97d4159b1161daa",
+        "size_bytes": 5568,
+        "source": "current（本任务未修改该文件，当前哈希即基线）",
+        "matches_experiment_snapshot": false,
+        "current_sha256": "fd23ac395194924d0d44d926f1c5cdb654a80733458ee14fb97d4159b1161daa",
+        "changed_by_task": false
+      },
+      {
+        "path": "scripts/command_handler.py",
+        "role": "指令处理门面（未改）",
+        "sha256": "37ce8591fb670b997c91a1b44bdd22f16e0be82f1f4b2fe1e4bca5bf8965b8da",
+        "size_bytes": 2529,
+        "source": "experiment_snapshot（与任务开始前生产文件逐字节一致）",
+        "matches_experiment_snapshot": true,
+        "current_sha256": "37ce8591fb670b997c91a1b44bdd22f16e0be82f1f4b2fe1e4bca5bf8965b8da",
+        "changed_by_task": false
+      },
+      {
+        "path": "scripts/commands/_state.py",
+        "role": "指令共享状态（未改）",
+        "sha256": "51cde8b2921a2fcfae88a2896fa212b4f61deb43f8ad81fa3c52ecd7d43a226a",
+        "size_bytes": 5965,
+        "source": "experiment_snapshot（与任务开始前生产文件逐字节一致）",
+        "matches_experiment_snapshot": true,
+        "current_sha256": "51cde8b2921a2fcfae88a2896fa212b4f61deb43f8ad81fa3c52ecd7d43a226a",
+        "changed_by_task": false
+      },
+      {
+        "path": "scripts/test_proactive_limit.py",
+        "role": "既有主动限流测试（未改，语义保持）",
+        "sha256": "ff9b73639e717b851df4de320b738c4742485a464e83c833a997ae2b0afd3656",
+        "size_bytes": 5158,
+        "source": "experiment_snapshot（与任务开始前生产文件逐字节一致）",
+        "matches_experiment_snapshot": true,
+        "current_sha256": "ff9b73639e717b851df4de320b738c4742485a464e83c833a997ae2b0afd3656",
+        "changed_by_task": false
+      }
+    ]
+  },
+  "current_after_task": {
+    "note": "本任务完成后的文件哈希；new 文件为新增，modified 文件为本次改动",
+    "files": [
+      {
+        "path": "reverse_bot.py",
+        "sha256": "2012663a18b64555420af0f1a3e96075120f3d9978fc7e7b890eafdf1eecd446",
+        "size_bytes": 37647,
+        "role": "modified",
+        "summary": "接入台账路径、决策回复 echo 回执、回执路由、message_id 透传"
+      },
+      {
+        "path": "scripts/decision_engine.py",
+        "sha256": "561ab312725ac620b81e70c0fd03645e7a58ee3c2ff532aaed8ae2aed534be6a",
+        "size_bytes": 95218,
+        "role": "modified",
+        "summary": "台账字段与 stages、@bot 独立限流、分类器异常标记、message_id 去重、生成异常收口"
+      },
+      {
+        "path": "scripts/decision_trace.py",
+        "sha256": "2dcdc9a72d8ea742bc1ade1ff79f77d58a9c29497d91c2d96eada0175a717541",
+        "size_bytes": 28795,
+        "role": "new",
+        "summary": "结构化决策台账（JSONL schema v1）+ @bot 回复限流器"
+      },
+      {
+        "path": "scripts/decision_receipt.py",
+        "sha256": "4a02a3ab302c1fa0a2436112010ec81953f5e0ae8651808976bad5fce95a96e1",
+        "size_bytes": 10350,
+        "role": "new",
+        "summary": "决策回复的 OneBot echo 回执层（ok/failed/unknown）"
+      },
+      {
+        "path": "scripts/test_decision_release.py",
+        "sha256": "fb40977ead390a544754582a44837ec97258a0dc826d2a1d6db0997dd54ee3da",
+        "size_bytes": 66381,
+        "role": "new",
+        "summary": "51 条离线 unittest（台账/限流/回执/异常/入口/安全）"
+      }
+    ]
+  },
+  "unchanged_production_configs": {
+    "note": "config/ 下生产配置在本任务中未被修改（哈希与基线一致；mtime 亦未变化）",
+    "files": [
+      {
+        "path": "config/decision_rules.json",
+        "role": "生产配置（本任务未修改）",
+        "sha256": "aa9354a50565a1a88ae0ea410620839fc19299e9b94aca6476eb4013d4b74d90",
+        "size_bytes": 1776,
+        "source": "current（本任务未修改该文件，当前哈希即基线）",
+        "matches_experiment_snapshot": false,
+        "current_sha256": "aa9354a50565a1a88ae0ea410620839fc19299e9b94aca6476eb4013d4b74d90",
+        "changed_by_task": false
+      },
+      {
+        "path": "config/group_features.json",
+        "role": "生产配置（本任务未修改）",
+        "sha256": "a832e006afe85a78b6f65bc1a180c6d472e622d8183c1a1bbd0051ca5bfdb27b",
+        "size_bytes": 1002,
+        "source": "current（本任务未修改该文件，当前哈希即基线）",
+        "matches_experiment_snapshot": false,
+        "current_sha256": "a832e006afe85a78b6f65bc1a180c6d472e622d8183c1a1bbd0051ca5bfdb27b",
+        "changed_by_task": false
+      },
+      {
+        "path": "config/active_model.json",
+        "role": "生产配置（本任务未修改）",
+        "sha256": "267cb5f413ea57a83bf6aa384621640560b5b16e5316574f425e7597f13f2094",
+        "size_bytes": 32,
+        "source": "current（本任务未修改该文件，当前哈希即基线）",
+        "matches_experiment_snapshot": false,
+        "current_sha256": "267cb5f413ea57a83bf6aa384621640560b5b16e5316574f425e7597f13f2094",
+        "changed_by_task": false
+      },
+      {
+        "path": "config/model_pool.json",
+        "role": "生产配置（本任务未修改）",
+        "sha256": "f8cb7537c931949b24030eb1b42603fda85c17520a46d23764941ea8a6808697",
+        "size_bytes": 701,
+        "source": "current（本任务未修改该文件，当前哈希即基线）",
+        "matches_experiment_snapshot": false,
+        "current_sha256": "f8cb7537c931949b24030eb1b42603fda85c17520a46d23764941ea8a6808697",
+        "changed_by_task": false
+      },
+      {
+        "path": "config/active_character.json",
+        "role": "生产配置（本任务未修改）",
+        "sha256": "985c2298148121274686ce3aa1a6322797355a875da94bbae617ec9a62a0a4c8",
+        "size_bytes": 93,
+        "source": "current（本任务未修改该文件，当前哈希即基线）",
+        "matches_experiment_snapshot": false,
+        "current_sha256": "985c2298148121274686ce3aa1a6322797355a875da94bbae617ec9a62a0a4c8",
+        "changed_by_task": false
+      },
+      {
+        "path": "config/group_characters.json",
+        "role": "生产配置（本任务未修改）",
+        "sha256": "8c9f90a162449834d91097b3e195e04cdd6d2e94a7bf3038d5b19cfb913e296f",
+        "size_bytes": 89,
+        "source": "current（本任务未修改该文件，当前哈希即基线）",
+        "matches_experiment_snapshot": false,
+        "current_sha256": "8c9f90a162449834d91097b3e195e04cdd6d2e94a7bf3038d5b19cfb913e296f",
+        "changed_by_task": false
+      },
+      {
+        "path": "config/stickers.json",
+        "role": "生产配置（本任务未修改）",
+        "sha256": "fecfb6840f62bdf306a5995419b02aa7716c6c6d7d234abde95d12bb1bb5e3ec",
+        "size_bytes": 1498,
+        "source": "current（本任务未修改该文件，当前哈希即基线）",
+        "matches_experiment_snapshot": false,
+        "current_sha256": "fecfb6840f62bdf306a5995419b02aa7716c6c6d7d234abde95d12bb1bb5e3ec",
+        "changed_by_task": false
+      },
+      {
+        "path": "config/labels.json",
+        "role": "生产配置（本任务未修改）",
+        "sha256": "34e691ae9c86b04ed39ec43b0fde2cd7b5795b26a36d55f79d03d4c9feda7d42",
+        "size_bytes": 139,
+        "source": "current（本任务未修改该文件，当前哈希即基线）",
+        "matches_experiment_snapshot": false,
+        "current_sha256": "34e691ae9c86b04ed39ec43b0fde2cd7b5795b26a36d55f79d03d4c9feda7d42",
+        "changed_by_task": false
+      }
+    ]
+  },
+  "experiment_reference": {
+    "dir": "language_lab/experiments/decision_replay_20261103",
+    "snapshot_manifest_sha256": "e863fea38b935295026e84658e1952d05ffcf47aae48a14d69ad68511d637862",
+    "snapshot_entries_verified": 317,
+    "snapshot_entries_changed": 0,
+    "scenario": "observed（生成桩隔离，一步观察历史）",
+    "policy_intent_k": 672,
+    "decision_points_n": 23256,
+    "policy_intent_rate": "672 / 23256 = 2.8896%",
+    "interpretation": "这是「生成前政策发言意图」占比，不是实际发送率，也不是长期在线发言率；不得据此调整阈值或追求更高发言率。实验目录只读，本任务未改写其 snapshot/raw/data/out/report。"
+  },
+  "models": {
+    "active_model": "deepseek-flash",
+    "active_model_file_sha256": "267cb5f413ea57a83bf6aa384621640560b5b16e5316574f425e7597f13f2094",
+    "model_pool_tiers": [
+      [
+        "deepseek-flash",
+        "deepseek-flash-2"
+      ],
+      [
+        "deepseek-v4-flash-ascend",
+        "deepseek-v4-flash-ascend1"
+      ],
+      [
+        "qwen3.8-flash-next-2",
+        "qwen3.8-flash-next"
+      ],
+      [
+        "glm-5.3-flash"
+      ],
+      [
+        "qwen3.8-reasoner",
+        "qwen-reasoner"
+      ]
+    ],
+    "model_pool_file_sha256": "f8cb7537c931949b24030eb1b42603fda85c17520a46d23764941ea8a6808697",
+    "model_egress": "scripts/llm_pool.py → 本地网关（本任务未调用）",
+    "classifier": {
+      "default_model": "paraphrase-multilingual-MiniLM-L12-v2",
+      "fallback_model": "paraphrase-MiniLM-L3-v2",
+      "local_cache_dir": "models_cache/models--sentence-transformers--paraphrase-multilingual-MiniLM-L12-v2",
+      "local_cache_present": true,
+      "note": "分类器模型文件不在 snapshot 内，其哈希未冻结（沿用实验报告的限制说明）"
+    }
+  },
+  "behavior_contract": {
+    "trace": {
+      "schema_version": "decision_trace.v1",
+      "path_production": "logs/decision_trace.jsonl",
+      "write_policy": "单记录 + stages 数组，决策收尾时一次追加一行；默认（未显式给路径）不写文件",
+      "env": {
+        "DECISION_TRACE_PATH": "演练重定向（生产默认路径不要改）",
+        "DECISION_TRACE_DISABLED": "强制关闭（灰度观察期不得设置）"
+      },
+      "trace_id": "优先 message_id；缺失时随机 UUID；不记录消息正文",
+      "semantics": {
+        "policy_intent": "规则希望发言（生成前）",
+        "generation_ok": "得到可用文字内容",
+        "send_status_ok": "OneBot 明确成功（status=ok 且 retcode=0）；websocket.write 成功不算 ok"
+      },
+      "privacy": "不记录消息正文、base64、完整 payload、本地图片路径",
+      "write_failure_observability": "write_failures/last_error_type + 首次 stderr 警告；atexit 关闭句柄；写失败不影响决策链，但该条台账会缺失",
+      "orphan_tracking_key": "(group_id, trace_id)"
+    },
+    "at_reply_limits": {
+      "defaults_in_code": {
+        "at_reply_min_interval_seconds": 5,
+        "at_reply_max_per_user_per_window": 6,
+        "at_reply_window_seconds": 60
+      },
+      "key": "(group_id, user_id)",
+      "independent_of": "proactive_max_per_hour（@bot 仍绕过后者）",
+      "override": "可选 config/decision_rules.json 的 at_reply 块 / 同名扁平键 / at_reply.groups[gid]（本任务未写生产配置）",
+      "blocked_stage": "at_rate_limited（final_outcome=silent，生成/表情之前阻断）",
+      "zero_semantics": "min_interval=0 或 max_per_user=0 表示显式关闭该维度（仅测试/应急）；window<=0/非法回落 60 秒"
+    },
+    "send_receipt": {
+      "module": "scripts/decision_receipt.py",
+      "echo_prefix": "decision:",
+      "timeout_default_seconds": 10,
+      "timeout_override": "config/decision_rules.json 可选键 send_receipt_timeout_seconds / 环境变量 DECISION_RECEIPT_TIMEOUT_SECONDS",
+      "states": [
+        "ok",
+        "failed",
+        "unknown"
+      ],
+      "unknown_policy": "不自动重发；failed 本任务也不重试",
+      "legacy_paths_without_receipt": [
+        "指令回复 send_message / send_group_image / send_group_file",
+        "+1 复读",
+        "新人欢迎",
+        "神秘数字队列"
+      ],
+      "write_timeout": "websocket.send 与回执等待同受 timeout 约束；写入超时 => unknown/write_timeout，不重发"
+    },
+    "classifier_error": {
+      "behavior": "fail-closed 不回复（与改动前用户可见行为一致）",
+      "trace": "classifier_error={type, phase}，独立 stage/final_outcome，不计入 classifier_low_confidence",
+      "counter": "DecisionEngine.classifier_error_count / 台账 classifier_error_total",
+      "privacy": "不记录异常文本（可能夹带消息正文）",
+      "try_scope": "覆盖分类器懒加载 + 单条推理；加载失败同样 fail-closed 并记 classifier_error"
+    },
+    "duplicate_message_id": {
+      "key": "(group_id, message_id)",
+      "scope": "DecisionEngine 进程内，最多 1024 键，重启清空",
+      "effect": "不产生第二次决策/发送；抑制发生在台账创建前（无台账记录，只写 bot 日志）"
+    }
+  },
+  "verification": {
+    "test_command": "python -m unittest scripts.test_proactive_limit scripts.test_decision_release -v",
+    "results": {
+      "scripts.test_proactive_limit": "7 tests, OK（原文件未改，SHA-256 ff9b73639e717b851df4de320b738c4742485a464e83c833a997ae2b0afd3656）",
+      "scripts.test_decision_release": "51 tests, OK",
+      "combined": "Ran 58 tests in 0.415s, OK",
+      "scripts.test_reference": "49 tests, OK（TEMP/TMP 指向工作区临时目录；本机沙箱默认 TEMP 不可写，非本次改动引入）"
+    },
+    "imports": {
+      "reverse_bot": "OK",
+      "private_bot": "OK"
+    },
+    "git_diff_check": "pass",
+    "production_decision_trace_created": false,
+    "experiment_snapshot_entries_verified": 317,
+    "experiment_snapshot_entries_changed": 0,
+    "experiment_data_out_report_mtime_after_task_start": false,
+    "real_qq_message_sent": false,
+    "production_onebot_ws_connected": false,
+    "real_model_called": false,
+    "service_started_or_restarted": false,
+    "production_config_modified": false,
+    "git_commit_or_push": false,
+    "independent_audit": {
+      "performed": true,
+      "p0_blockers": 0,
+      "p1_fixed": 3,
+      "p2_fixed_or_recorded": 12,
+      "auditor_rerun": "Ran 55 tests, OK（审计时版本）+ scripts.test_reference 49 tests, OK",
+      "residual_observation": "审计脚本于 18:08:29 向 logs/bot.2026-11-04.log 误写 2 行/209B（保留现场未清理）；真实模型调用来自一直在运行的生产 bot（PID 14284），非本任务命令",
+      "notes": "详见 READINESS_REPORT.md §8"
+    },
+    "logs_bot_2026_11_04_size_after_task_commands": 0,
+    "logs_bot_2026_11_04_size_current": 209,
+    "logs_bot_2026_11_04_note": "验收命令跑完为 0 字节；随后独立审计脚本误写 2 行（209B），按只读纪律保留现场"
+  },
+  "deliverables": [
+    "language_lab/release/decision_canary/manifest.json（本文件）",
+    "language_lab/release/decision_canary/CANARY_PLAN.md",
+    "language_lab/release/decision_canary/ROLLBACK.md",
+    "language_lab/release/decision_canary/candidate_group_features.json",
+    "language_lab/release/decision_canary/READINESS_REPORT.md",
+    "language_lab/release/decision_canary/rollback_backups/group_features.pre_all_group_canary_20261104_212703.json"
+  ],
+  "rollback_entrypoints": {
+    "config": "局部异常仅关闭异常群 decision_engine；全局异常将 1102194840、284517232、1055881417 三群 decision_engine 均置 false。其余功能位不动，mtime 热加载，无需重启。",
+    "code": "git restore --source=6ad6b325623ffdc7f2863e293007e8b223bf6407 -- reverse_bot.py scripts/decision_engine.py（需管理员控制台），并删除 3 个新增文件",
+    "details": "见 ROLLBACK.md"
+  },
+  "documents": {
+    "note": "发布文档哈希（manifest.json 自身不写自身哈希，避免自引用）",
+    "files": [
+      {
+        "path": "language_lab/release/decision_canary/CANARY_PLAN.md",
+        "sha256": "ab27dff3d02294e1cd8eaff9e1230a7d604943c8e6c5c7283905448c095ea6cb",
+        "size_bytes": 9317,
+        "role": "全白名单三群灰度方案；1102194840 重点观察；等待用户重启"
+      },
+      {
+        "path": "language_lab/release/decision_canary/ROLLBACK.md",
+        "sha256": "a6a4a93201078b29d29cbc9e63eb61443a4e54bb81af1b63fbb0a3a0375a6e3b",
+        "size_bytes": 5073,
+        "role": "单群局部/三群全局配置回滚优先；unknown 不补发"
+      },
+      {
+        "path": "language_lab/release/decision_canary/candidate_group_features.json",
+        "sha256": "8b2722955448470969e99ff36f463724e028f42e905585c1ef4285592e07b8ab",
+        "size_bytes": 854,
+        "role": "三群灰度候选对照文件（非生产副本）"
+      },
+      {
+        "path": "language_lab/release/decision_canary/READINESS_REPORT.md",
+        "sha256": "ec6b5ed6860e38bede219e51eeefd81efc5bb3689504d6424464a47962aed2fe",
+        "size_bytes": 32011,
+        "role": "全白名单群灰度就绪报告（测试/安全核查/独立审计）"
+      },
+      {
+        "path": "language_lab/release/decision_canary/rollback_backups/group_features.pre_all_group_canary_20261104_212703.json",
+        "sha256": "e3bf9e4459e24739e80935ab0543526e2d7659162ddb053368496d1e31b0897f",
+        "size_bytes": 1048,
+        "role": "生产群配置内容备份",
+        "source_path": "config/group_features.json",
+        "source_sha256": "a832e006afe85a78b6f65bc1a180c6d472e622d8183c1a1bbd0051ca5bfdb27b",
+        "json_content_equal": true,
+        "byte_identical": false,
+        "note": "JSON 内容一致；写盘换行及末尾换行不同，不是逐字节副本。"
+      }
+    ]
+  },
+  "hash_convention": {
+    "note": "本清单的 baseline/current 哈希基于**未提交的工作树字节**：reverse_bot.py / scripts/decision_engine.py 沿用仓库检出的 CRLF，新增文件为 LF；.gitattributes 声明 eol=lf，git 提交/restore 后行尾会变化、哈希随之变化（行为不变）。核对时请与同一口径比较；git restore 后的 LF 期望值见下方 lf_via_git_restore。",
+    "crlf_baseline": {
+      "reverse_bot.py": "433b2004911139c7566f54a518e168c2a1f82349d3ed4fe98efcfa37c6ae1d66",
+      "scripts/decision_engine.py": "8331cd4d6ffccf42b51ce021bc62f142f6670abccf30b13a23959d36e59acfde"
+    },
+    "lf_via_git_restore": {
+      "reverse_bot.py": "ddb17e43591890d6a4bbeb3add382522e976a5bc6a9a8584acd1b2b1171e57cd",
+      "scripts/decision_engine.py": "8e8d2b92c50f0824723d197e17216354f1c1b4f6e358dc345f136ae1b777ab1e"
+    }
+  }
+}

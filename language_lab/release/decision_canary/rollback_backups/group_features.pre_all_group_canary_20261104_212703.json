@@ -1,0 +1,45 @@
+{
+  "284517232": {
+    "group_name": "碧油鸡乐土（转正版）",
+    "features": {
+      "decision_engine": true,
+      "plus_one": true,
+      "commands": true,
+      "newcomer_welcome": true,
+      "profile_record": true,
+      "vision": true,
+      "search": true,
+      "poke_menu": true,
+      "reaction_menu": true,
+      "sticker": true
+    }
+  },
+  "1055881417": {
+    "group_name": "碧油鸡乐土(二阶英灵殿）",
+    "features": {
+      "decision_engine": true,
+      "plus_one": true,
+      "commands": true,
+      "newcomer_welcome": true,
+      "profile_record": true,
+      "vision": true,
+      "search": true,
+      "sticker": false
+    }
+  },
+  "1102194840": {
+    "group_name": "",
+    "features": {
+      "decision_engine": true,
+      "plus_one": true,
+      "commands": true,
+      "newcomer_welcome": true,
+      "profile_record": true,
+      "vision": true,
+      "search": true,
+      "poke_menu": true,
+      "reaction_menu": true,
+      "sticker": true
+    }
+  }
+}

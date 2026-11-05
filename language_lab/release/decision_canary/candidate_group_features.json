@@ -1,0 +1,26 @@
+{
+  "_comment": "全白名单群灰度候选对照文件，不是生产配置副本，禁止整文件覆盖 config/group_features.json。用户已确认三群共同灰度，1102194840 为重点观察群。生产当前三群 decision_engine 均已为 true，因此本次无需修改生产配置。其余功能位以 config/group_features.json 及备份为准。",
+  "_gray_scope": {
+    "mode": "all_whitelist_groups",
+    "focus_group_id": "1102194840",
+    "awaiting_user_restart": true
+  },
+  "1102194840": {
+    "group_name": "",
+    "features": {
+      "decision_engine": true
+    }
+  },
+  "284517232": {
+    "group_name": "碧油鸡乐土（转正版）",
+    "features": {
+      "decision_engine": true
+    }
+  },
+  "1055881417": {
+    "group_name": "碧油鸡乐土(二阶英灵殿）",
+    "features": {
+      "decision_engine": true
+    }
+  }
+}
