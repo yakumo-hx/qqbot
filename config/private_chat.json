@@ -56,7 +56,7 @@
   "image": {
     "enabled": true,
     "vision": true,
-    "vision_model": "qwen3.8-chat",
+    "vision_model": "qwen3.8-flash",
     "recognize_stickers": true,
     "sticker_max_per_hour": 8,
     "sticker_vision_timeout_seconds": 30.0,

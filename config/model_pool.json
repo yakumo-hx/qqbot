@@ -2,11 +2,10 @@
   "base_url_env": "LLM_POOL_BASE_URL",
   "api_key_env": "LLM_POOL_API_KEY",
   "tiers": [
-    ["deepseek-flash", "deepseek-flash-2"],
-    ["deepseek-v4-flash-ascend", "deepseek-v4-flash-ascend1"],
-    ["qwen3.8-flash-next-2", "qwen3.8-flash-next"],
-    ["glm-5.3-flash"],
-    ["qwen3.8-reasoner", "qwen-reasoner"]
+    ["deepseek-v4-flash"],
+    ["qwen3.8-flash"],
+    ["minimax-m2.7"],
+    ["glm-5.3-flash"]
   ],
   "attempt_timeout_seconds": 45,
   "total_budget_seconds": 55,
@@ -15,10 +14,10 @@
   "max_tokens_default": 500,
   "min_max_tokens": 512,
   "model_overrides": {
-    "glm-5.3-flash": {
-      "min_max_tokens": 128
+    "qwen3.8-flash": {
+      "min_max_tokens": 1024
     }
   },
-  "no_response_format": ["qwen3.8-flash-next"],
-  "vision_models": ["deepseek-flash", "glm-5.3-flash", "qwen3.8-chat"]
+  "no_response_format": [],
+  "vision_models": ["deepseek-v4-flash", "qwen3.8-flash", "glm-5.3-flash"]
 }
