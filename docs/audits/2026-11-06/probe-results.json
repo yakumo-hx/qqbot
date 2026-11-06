@@ -1,0 +1,120 @@
+{
+  "commit": "d32b2ab60f2dc7eb66fa3ba1b47f24e42f804f25",
+  "classifier_event_loop": {
+    "injected_sync_work_ms": 150,
+    "timer_due_ms": 10,
+    "timer_fired_ms": 16.0
+  },
+  "image_download_event_loop": {
+    "injected_sync_work_ms": 150,
+    "timer_due_ms": 10,
+    "timer_fired_ms": 16.0
+  },
+  "classifier_density_fallback": {
+    "density": 12,
+    "score": 0.2,
+    "replied": false,
+    "model_calls": 0,
+    "decision": {
+      "密度": "12.00 条/分钟",
+      "分类结果": "需要回复 (0.2000)",
+      "阈值": "0.6000",
+      "降级": "置信度过低 (0.2000 < 0.45)，密度决策",
+      "降级决策": "密度12.0>10，回复",
+      "最终": "不回复 (label=需要回复, score=0.2000 < 0.6000)",
+      "耗时_ms": "0"
+    }
+  },
+  "at_replies_consume_proactive_quota": {
+    "successful_at_generations": 5,
+    "quota_used": 5,
+    "next_proactive_replied": false,
+    "decision": {
+      "限流": "主动发言已达 5/5 次每 3600s，跳过",
+      "耗时_ms": "0"
+    }
+  },
+  "per_group_head_of_line": {
+    "same_group_pending_count": 21,
+    "same_group_started_generations": 1,
+    "other_group_completed": true
+  },
+  "context_outside_child_deadline": {
+    "child_deadline_ms": 10,
+    "observed_wait_ms": 60,
+    "still_pending": true,
+    "child_created": false
+  },
+  "failed_receipt_keeps_reply_state": {
+    "platform_ack": "failed",
+    "received_new_messages": 2,
+    "generated_reply_count": 2,
+    "send_attempt_count": 1,
+    "payload_has_echo": true,
+    "quota_used": 1,
+    "last_reply_retained": "这是离线验证的回答",
+    "cooldown_time_retained": true,
+    "second_decision": {
+      "决策": "@bot 强制回复",
+      "回应目标": "离线审查(990011)",
+      "去重": "与上次回复完全相同，跳过",
+      "耗时_ms": "0"
+    },
+    "recorded_send_status": [
+      "failed",
+      "not_attempted"
+    ]
+  },
+  "receipt_timeout_resets_after_write": {
+    "configured_timeout_ms": 100,
+    "injected_write_delay_ms": 80,
+    "elapsed_ms": 203.0,
+    "status": "unknown",
+    "error_kind": "timeout"
+  },
+  "first_search_has_no_wall_clock_deadline": {
+    "configured_io_timeout_ms": 150,
+    "elapsed_ms": 1110.0,
+    "returned_success": true
+  },
+  "profile_duplicate_after_retry": {
+    "retry_succeeded": true,
+    "old_messages_still_in_next_batch": 5
+  },
+  "profile_concurrent_retry_loss": {
+    "new_batch_inserted_while_waiting": true,
+    "new_batch_present_after_retry": false
+  },
+  "model_migration": {
+    "decision_default": "deepseek-flash",
+    "configured_active": "deepseek-v4-flash",
+    "current_vision_preference": [
+      [
+        "preferred",
+        "qwen3.8-flash"
+      ],
+      [
+        1,
+        "deepseek-v4-flash"
+      ],
+      [
+        4,
+        "glm-5.3-flash"
+      ]
+    ],
+    "old_vision_preference": [
+      [
+        1,
+        "deepseek-v4-flash"
+      ],
+      [
+        2,
+        "qwen3.8-flash"
+      ],
+      [
+        4,
+        "glm-5.3-flash"
+      ]
+    ]
+  }
+}

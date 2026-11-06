@@ -1,0 +1,243 @@
+test_10_普通沉默与普通policy_intent可区分 (scripts.test_decision_release.DecisionOutcomeTest) ... ok
+test_11_艾特机器人正常回复 (scripts.test_decision_release.DecisionOutcomeTest) ... ok
+test_12_六十秒窗口内第七次艾特被阻断 (scripts.test_decision_release.DecisionOutcomeTest) ... ok
+test_13_五秒最小间隔生效 (scripts.test_decision_release.DecisionOutcomeTest) ... ok
+test_14_假时钟越过窗口后恢复 (scripts.test_decision_release.DecisionOutcomeTest) ... ok
+test_15_两群两用户计数互不影响 (scripts.test_decision_release.DecisionOutcomeTest) ... ok
+test_16_艾特仍绕过proactive每小时上限 (scripts.test_decision_release.DecisionOutcomeTest) ... ok
+test_17_限流策略默认值可由候选配置覆盖 (scripts.test_decision_release.DecisionOutcomeTest) ... ok
+test_18_新实例重置上下文冷却限流与去重状态 (scripts.test_decision_release.DecisionOutcomeTest) ... ok
+test_19_重复message_id不产生第二次决策 (scripts.test_decision_release.DuplicateMessageTest) ... ok
+test_19b_同一message_id跨群互不影响 (scripts.test_decision_release.DuplicateMessageTest) ... ok
+test_38_指令处理不受新限流影响 (scripts.test_decision_release.EntryIntegrationTest) ... ok
+test_39_入口重复message_id不产生第二次决策发送 (scripts.test_decision_release.EntryIntegrationTest) ... ok
+test_40_入口发送ok写入台账 (scripts.test_decision_release.EntryIntegrationTest) ... ok
+test_41_入口unknown不自动重发 (scripts.test_decision_release.EntryIntegrationTest) ... ok
+test_42_入口第七次艾特在生成前被阻断 (scripts.test_decision_release.EntryIntegrationTest) ... ok
+test_43_echo回执在入口被路由且不当群消息 (scripts.test_decision_release.EntryIntegrationTest) ... ok
+test_44_入口流程全程无真实网络与子进程 (scripts.test_decision_release.EntryIntegrationTest) ... Error on reading from the event loop self pipe
+loop: <ProactorEventLoop running=True closed=False debug=False>
+Traceback (most recent call last):
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python310\lib\asyncio\proactor_events.py", line 784, in _loop_self_reading
+    f = self._proactor.recv(self._ssock, 4096)
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python310\lib\asyncio\windows_events.py", line 462, in recv
+    if isinstance(conn, socket.socket):
+TypeError: isinstance() arg 2 must be a type, a tuple of types, or a union
+ok
+test_20_空文本结局 (scripts.test_decision_release.GenerationOutcomeTest) ... ok
+test_21_模型异常结局且不抛出 (scripts.test_decision_release.GenerationOutcomeTest) ... ok
+test_22_内容安全过滤结局 (scripts.test_decision_release.GenerationOutcomeTest) ... [决策引擎] 内容安全拦截: 匹配关键词 '杀人'
+ok
+test_23_精确去重结局 (scripts.test_decision_release.GenerationOutcomeTest) ... ok
+test_24_相似度去重结局 (scripts.test_decision_release.GenerationOutcomeTest) ... ok
+test_25_五种结局互不混淆 (scripts.test_decision_release.GenerationOutcomeTest) ... [决策引擎] 内容安全拦截: 匹配关键词 '杀人'
+ok
+test_26_分类器异常记录为classifier_error且fail_closed (scripts.test_decision_release.GenerationOutcomeTest) ... [决策引擎] 分类器调用失败（fail-closed）: ValueError
+[决策引擎] 分类器调用失败（fail-closed）: RuntimeError
+ok
+test_45_生产配置哈希未改变 (scripts.test_decision_release.ProductionSafetyTest) ... ok
+test_46_生产决策台账未被创建 (scripts.test_decision_release.ProductionSafetyTest) ... ok
+test_47_环境安全网生效 (scripts.test_decision_release.ProductionSafetyTest) ... ok
+test_48_入口接线使用回执层且默认关闭生产台账 (scripts.test_decision_release.ProductionSafetyTest) ... FAIL
+test_27_发送成功ok只认OneBot明确回执 (scripts.test_decision_release.ReceiptTest) ... ok
+test_28_明确失败failed且不重试 (scripts.test_decision_release.ReceiptTest) ... ok
+test_29_超时unknown且不重发 (scripts.test_decision_release.ReceiptTest) ... ok
+test_30_写入异常unknown (scripts.test_decision_release.ReceiptTest) ... ok
+test_30b_写入超时unknown (scripts.test_decision_release.ReceiptTest) ... ok
+test_31_断连时未完成发送记为unknown (scripts.test_decision_release.ReceiptTest) ... ok
+test_32_非法回执算failed (scripts.test_decision_release.ReceiptTest) ... ok
+test_33_echo与群消息正确分流 (scripts.test_decision_release.ReceiptTest) ... ok
+test_34_图片发送payload有base64但台账不泄漏 (scripts.test_decision_release.ReceiptTest) ... ok
+test_35_发送状态聚合优先级 (scripts.test_decision_release.ReceiptTest) ... ok
+test_36_legacy路径声明保留 (scripts.test_decision_release.ReceiptTest) ... ok
+test_37_回执模块不引入私聊运行时 (scripts.test_decision_release.ReceiptTest) ... ok
+test_01_记录字段齐全且不含消息正文 (scripts.test_decision_release.TraceLedgerTest) ... ok
+test_02_trace_id优先使用message_id (scripts.test_decision_release.TraceLedgerTest) ... ok
+test_03_每次决策恰好一行 (scripts.test_decision_release.TraceLedgerTest) ... ok
+test_04_并发决策不会交错成半行 (scripts.test_decision_release.TraceLedgerTest) ... ok
+test_05_表情台账不含base64与本地路径 (scripts.test_decision_release.TraceLedgerTest) ... ok
+test_06_台账收尾幂等 (scripts.test_decision_release.TraceLedgerTest) ... ok
+test_07_漏收尾的台账被兜底标记incomplete (scripts.test_decision_release.TraceLedgerTest) ... ok
+test_08_台账默认关闭且不写生产路径 (scripts.test_decision_release.TraceLedgerTest) ... ok
+test_08b_台账写失败不静默且不影响决策 (scripts.test_decision_release.TraceLedgerTest) ... ok
+test_09_会话级trace_id串联且三语义不混用 (scripts.test_decision_release.TraceLedgerTest) ... ok
+test_01_分类推理在线程池且阻塞时事件循环可跑 (scripts.test_group_event_loop_offload.ClassifierEventLoopTest) ... ok
+test_02_分类结果与异常fail_closed语义不变 (scripts.test_group_event_loop_offload.ClassifierEventLoopTest) ... [决策引擎] 分类器调用失败（fail-closed）: ValueError
+ok
+test_03_懒加载构造只一次且在线程池 (scripts.test_group_event_loop_offload.ClassifierEventLoopTest) ... ok
+test_04_懒加载构造失败仍fail_closed (scripts.test_group_event_loop_offload.ClassifierEventLoopTest) ... [决策引擎] 分类器调用失败（fail-closed）: RuntimeError
+ok
+test_05_多群并发时共享模型不并发推理 (scripts.test_group_event_loop_offload.ClassifierEventLoopTest) ... ok
+test_06_话题encode_batch在线程池且失败返回0 (scripts.test_group_event_loop_offload.ClassifierEventLoopTest) ... [决策引擎] 话题检测编码失败: 编码失败
+Traceback (most recent call last):
+  File "D:\Codex\QQBotWorkspace\versions\upstream-main\scripts\decision_engine.py", line 1509, in _detect_topic_switch
+    recent_embs = await asyncio.to_thread(
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python310\lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python310\lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "D:\Codex\QQBotWorkspace\versions\upstream-main\scripts\decision_engine.py", line 472, in _serialized_classifier_call
+    return fn(*args, **kwargs)
+  File "D:\Codex\QQBotWorkspace\versions\upstream-main\scripts\test_group_event_loop_offload.py", line 78, in encode_batch
+    return self._encode(list(texts))
+  File "D:\Codex\QQBotWorkspace\versions\upstream-main\scripts\test_group_event_loop_offload.py", line 349, in _boom
+    raise RuntimeError("编码失败")
+RuntimeError: 编码失败
+ok
+test_10_类级共享模型跨实例串行 (scripts.test_group_event_loop_offload.ClassifierEventLoopTest)
+模拟决策线程与表情包模块各自持有分类器实例，但共享同一个模型。 ... ok
+test_11_表情路径整体offload且等待锁时不阻塞事件循环 (scripts.test_group_event_loop_offload.ClassifierEventLoopTest) ... ok
+test_12_表情快速返回与异常降级 (scripts.test_group_event_loop_offload.ClassifierEventLoopTest) ... ok
+test_07_图片下载与转码不在事件循环线程且不阻塞循环 (scripts.test_group_event_loop_offload.GroupImageOffloadTest) ... ok
+test_08_下载失败仍返回空列表且不转码不识图 (scripts.test_group_event_loop_offload.GroupImageOffloadTest) ... ok
+test_09_转码失败仍返回空列表且不识图 (scripts.test_group_event_loop_offload.GroupImageOffloadTest) ... ok
+test_01_慢速分块超过budget必须失败 (scripts.test_llm_pool_budget.LLMPoolBudgetTest) ... Executing <Task pending name='Task-433' coro=<IsolatedAsyncioTestCase._asyncioLoopRunner() running at C:\Users\Administrator\AppData\Local\Programs\Python\Python310\lib\unittest\async_case.py:101> wait_for=<Future pending cb=[Task.task_wakeup()] created at C:\Users\Administrator\AppData\Local\Programs\Python\Python310\lib\asyncio\base_events.py:429> created at C:\Users\Administrator\AppData\Local\Programs\Python\Python310\lib\unittest\async_case.py:117> took 0.110 seconds
+ok
+test_02_budget内正常响应仍成功 (scripts.test_llm_pool_budget.LLMPoolBudgetTest) ... ok
+test_03_预算耗尽后不再启动第二个模型 (scripts.test_llm_pool_budget.LLMPoolBudgetTest) ... ok
+test_04_单次attempt超时且预算充足时继续降档 (scripts.test_llm_pool_budget.LLMPoolBudgetTest) ... ok
+test_05_私聊自定义budget覆盖配置总预算 (scripts.test_llm_pool_budget.LLMPoolBudgetTest) ... ok
+test_06_审计重定向到临时目录 (scripts.test_llm_pool_budget.LLMPoolBudgetTest) ... ok
+test_01_超时会terminate并wait回收 (scripts.test_model_script_cleanup.ModelScriptCleanupTest) ... ok
+test_02_terminate后不退出会升级kill且有界 (scripts.test_model_script_cleanup.ModelScriptCleanupTest) ... ok
+test_03_取消时先回收再重新抛出CancelledError (scripts.test_model_script_cleanup.ModelScriptCleanupTest) ... ok
+test_04_正常退出不terminate也不kill (scripts.test_model_script_cleanup.ModelScriptCleanupTest) ... ok
+test_05_已退出进程清理时不得重复kill (scripts.test_model_script_cleanup.ModelScriptCleanupTest) ... ok
+test_apply_operations_and_close (scripts.test_private_chat.ActivityTest) ... ok
+test_current_and_prompt (scripts.test_private_chat.ActivityTest) ... ok
+test_period_schedule (scripts.test_private_chat.ActivityTest) ... ok
+test_persona_activity_block (scripts.test_private_chat.ActivityTest) ... ok
+test_proactive_factor (scripts.test_private_chat.ActivityTest) ... ok
+test_recurring_schedule (scripts.test_private_chat.ActivityTest) ... ok
+test_activity_command (scripts.test_private_chat.PrivateChatTest) ... ok
+test_activity_extract_from_chat (scripts.test_private_chat.PrivateChatTest) ... ok
+test_burst_reply_two_bubbles (scripts.test_private_chat.PrivateChatTest) ... Executing <Task pending name='Task-508' coro=<IsolatedAsyncioTestCase._asyncioLoopRunner() running at C:\Users\Administrator\AppData\Local\Programs\Python\Python310\lib\unittest\async_case.py:95> wait_for=<Future pending cb=[Task.task_wakeup()] created at C:\Users\Administrator\AppData\Local\Programs\Python\Python310\lib\asyncio\base_events.py:429> created at C:\Users\Administrator\AppData\Local\Programs\Python\Python310\lib\unittest\async_case.py:117> took 0.250 seconds
+ok
+test_correction_command (scripts.test_private_chat.PrivateChatTest) ... ok
+test_duplicate_image_retries_with_new_text_after_blocked (scripts.test_private_chat.PrivateChatTest) ... ok
+test_duplicate_image_reuses_valid_description (scripts.test_private_chat.PrivateChatTest) ... ok
+test_friend_request_whitelist (scripts.test_private_chat.PrivateChatTest) ... ok
+test_history_bootstrap (scripts.test_private_chat.PrivateChatTest) ... ok
+test_image_message_real_pipeline (scripts.test_private_chat.PrivateChatTest) ... ok
+test_image_message_sticker (scripts.test_private_chat.PrivateChatTest) ... ok
+test_image_message_vision (scripts.test_private_chat.PrivateChatTest) ... ok
+test_image_rate_limit (scripts.test_private_chat.PrivateChatTest) ... ok
+test_image_vision_module (scripts.test_private_chat.PrivateChatTest) ... ok
+test_memory_extract (scripts.test_private_chat.PrivateChatTest) ... ok
+test_pause_keyword (scripts.test_private_chat.PrivateChatTest) ... ok
+test_private_reply (scripts.test_private_chat.PrivateChatTest) ... ok
+test_proactive_send (scripts.test_private_chat.PrivateChatTest) ... ok
+test_relationship_command (scripts.test_private_chat.PrivateChatTest) ... ok
+test_rpc_call_resolve (scripts.test_private_chat.PrivateChatTest) ... ok
+test_search_injection_into_prompt (scripts.test_private_chat.PrivateChatTest) ... ok
+test_search_maybe_and_cache (scripts.test_private_chat.PrivateChatTest) ... ok
+test_search_prefilter_and_format (scripts.test_private_chat.PrivateChatTest) ... ok
+test_sensitive_placeholder_is_not_valid_description (scripts.test_private_chat.PrivateChatTest) ... ok
+test_sticker_disabled (scripts.test_private_chat.PrivateChatTest) ... ok
+test_sticker_recognized (scripts.test_private_chat.PrivateChatTest) ... ok
+test_vision_describe_preferred (scripts.test_private_chat.PrivateChatTest) ... ok
+test_whitelist (scripts.test_private_chat.PrivateChatTest) ... ok
+test_corrections (scripts.test_private_chat.PureTest) ... ok
+test_extract_text (scripts.test_private_chat.PureTest) ... ok
+test_normalize_display_name (scripts.test_private_chat.PureTest) ... ok
+test_parse_message_images_and_enrich (scripts.test_private_chat.PureTest) ... ok
+test_persona_card_and_stage (scripts.test_private_chat.PureTest) ... ok
+test_quiet_hours (scripts.test_private_chat.PureTest) ... ok
+test_raw_persona_mode (scripts.test_private_chat.PureTest) ... ok
+test_reply_plan (scripts.test_private_chat.PureTest) ... ok
+test_split_bubbles (scripts.test_private_chat.PureTest) ... ok
+test_split_target_two (scripts.test_private_chat.PureTest) ... ok
+test_sticker_kind_and_fallback (scripts.test_private_chat.PureTest) ... ok
+test_store_dedupe_and_forget (scripts.test_private_chat.PureTest) ... ok
+test_vision_order_prefers_visual_only_model (scripts.test_private_chat.PureTest) ... FAIL
+test_confidence_filter (scripts.test_private_dialogue.ActivityCompatTest) ... ok
+test_type_alias_and_chinese_period (scripts.test_private_dialogue.ActivityCompatTest) ... ok
+test_ai_act_valid_set (scripts.test_private_dialogue.BehaviorTest) ... ok
+test_follow_up (scripts.test_private_dialogue.BehaviorTest) ... ok
+test_no_repeat_question_after_two_asks (scripts.test_private_dialogue.BehaviorTest) ... ok
+test_question_answer (scripts.test_private_dialogue.BehaviorTest) ... ok
+test_support_single_bubble (scripts.test_private_dialogue.BehaviorTest) ... ok
+test_wait_when_queue_busy (scripts.test_private_dialogue.BehaviorTest) ... ok
+test_bubble_limit_and_length (scripts.test_private_dialogue.ComposerTest) ... ok
+test_corrections_per_bubble_and_empty_removed (scripts.test_private_dialogue.ComposerTest) ... ok
+test_json_fragment_with_preamble_not_sent (scripts.test_private_dialogue.ComposerTest) ... ok
+test_malformed_json_not_sent (scripts.test_private_dialogue.ComposerTest) ... ok
+test_plain_text_compat (scripts.test_private_dialogue.ComposerTest) ... ok
+test_unknown_act_normalized (scripts.test_private_dialogue.ComposerTest) ... ok
+test_valid_json_not_resplit (scripts.test_private_dialogue.ComposerTest) ... ok
+test_control_false_positive (scripts.test_private_dialogue.ControlDetectTest) ... ok
+test_pause_false_positive (scripts.test_private_dialogue.ControlDetectTest) ... ok
+test_is_question (scripts.test_private_dialogue.DialogueStateTest) ... ok
+test_question_and_catch (scripts.test_private_dialogue.DialogueStateTest) ... ok
+test_rebuild_clears_pending_and_restores_hints (scripts.test_private_dialogue.DialogueStateTest) ... ok
+test_build_structured_prompt_from_old_session (scripts.test_private_dialogue.LegacyDataTest) ... ok
+test_multiple_targets_end_as_one_current_user_message (scripts.test_private_dialogue.LegacyDataTest) ... ok
+test_duplicate_merge_is_saved_without_new_item (scripts.test_private_dialogue.MemoryPersistenceTest) ... ok
+test_hook_skips_recent_id_and_similar_text (scripts.test_private_dialogue.ProactiveDedupTest) ... ok
+test_legacy_last_proactive_timestamp_still_enforces_interval (scripts.test_private_dialogue.ProactiveDedupTest) ... ok
+test_self_thought_hook_respects_recent_usage (scripts.test_private_dialogue.ProactiveDedupTest) ... ok
+test_record_proactive_updates_stats (scripts.test_private_dialogue.ProactiveRuntimeTest) ... ok
+test_unknown_cooldown_blocks_next_tick (scripts.test_private_dialogue.ProactiveRuntimeTest) ... ok
+test_history_dedupe_and_sort (scripts.test_private_dialogue.StoreHistoryTest) ... ok
+test_history_dedupe_survives_restart (scripts.test_private_dialogue.StoreHistoryTest) ... ok
+test_history_import_keeps_latest_records_at_cache_limit (scripts.test_private_dialogue.StoreHistoryTest) ... ok
+test_update_turn_in_place (scripts.test_private_dialogue.StoreHistoryTest) ... ok
+test_ok_failed_unknown_disconnect (scripts.test_private_runtime.RPCOutcomeTest) ... ok
+test_control_confirmation_preempts_normal_reply (scripts.test_private_runtime.RuntimeTest) ... ok
+test_image_before_text_and_in_place_update (scripts.test_private_runtime.RuntimeTest) ... ok
+test_image_blocked_keeps_placeholder_and_marks_status (scripts.test_private_runtime.RuntimeTest) ... ok
+test_image_failure_then_text_keeps_order (scripts.test_private_runtime.RuntimeTest) ... ok
+test_image_timeout_marks_unavailable (scripts.test_private_runtime.RuntimeTest) ... ok
+test_interrupt_during_gap_cancels_old_second_bubble (scripts.test_private_runtime.RuntimeTest) ... ok
+test_interrupt_model_generation_discards_old (scripts.test_private_runtime.RuntimeTest) ... ok
+test_legacy_pipeline_still_works (scripts.test_private_runtime.RuntimeTest) ... ok
+test_malformed_json_not_sent_raw (scripts.test_private_runtime.RuntimeTest) ... ok
+test_old_bubble_commit_does_not_overwrite_new_state (scripts.test_private_runtime.RuntimeTest) ... ok
+test_partial_send_only_first_committed (scripts.test_private_runtime.RuntimeTest) ... ok
+test_proactive_busy_when_pending_exists (scripts.test_private_runtime.RuntimeTest) ... ok
+test_proactive_cancelled_by_user_message (scripts.test_private_runtime.RuntimeTest) ... ok
+test_proactive_rpc_inflight_completes_once (scripts.test_private_runtime.RuntimeTest) ... ok
+test_proactive_skipped_while_normal_reply_active (scripts.test_private_runtime.RuntimeTest) ... ok
+test_revision_rules_and_bubble_stats (scripts.test_private_runtime.RuntimeTest) ... ok
+test_second_bubble_inflight_is_allowed_to_finish (scripts.test_private_runtime.RuntimeTest) ... ok
+test_sent_reply_msg_id_dedupes_history (scripts.test_private_runtime.RuntimeTest) ... ok
+test_stop_cancels_runtime_workers (scripts.test_private_runtime.RuntimeTest) ... ok
+test_stop_propagates_cancellation_from_proactive_wait (scripts.test_private_runtime.RuntimeTest) ... ok
+test_structured_bubbles_keep_semantics (scripts.test_private_runtime.RuntimeTest) ... ok
+test_unknown_does_not_commit_and_history_dedupes (scripts.test_private_runtime.RuntimeTest) ... ok
+test_cap为0视为不限制 (scripts.test_proactive_limit.ProactiveLimitTest) ... ok
+test_两群计数互不影响 (scripts.test_proactive_limit.ProactiveLimitTest) ... ok
+test_五次要放行_第六次被拦 (scripts.test_proactive_limit.ProactiveLimitTest) ... ok
+test_低分不再靠热闹放行 (scripts.test_proactive_limit.ProactiveLimitTest)
+分数 0.55：改造前在热闹群会被放行（阈值0.45），现在应当被拦（阈值0.60）。 ... ok
+test_窗口滑过后恢复 (scripts.test_proactive_limit.ProactiveLimitTest) ... ok
+test_艾特机器人不受限流影响 (scripts.test_proactive_limit.ProactiveLimitTest) ... ok
+test_阈值曲线 (scripts.test_proactive_limit.ProactiveLimitTest) ... ok
+
+======================================================================
+FAIL: test_48_入口接线使用回执层且默认关闭生产台账 (scripts.test_decision_release.ProductionSafetyTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\Codex\QQBotWorkspace\versions\upstream-main\scripts\test_decision_release.py", line 1454, in test_48_入口接线使用回执层且默认关闭生产台账
+    self.assertEqual(rb.decision_engine.DEFAULT_MODEL,
+AssertionError: 'deepseek-flash' != 'deepseek-v4-flash'
+- deepseek-flash
++ deepseek-v4-flash
+?          +++
+
+
+======================================================================
+FAIL: test_vision_order_prefers_visual_only_model (scripts.test_private_chat.PureTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\Codex\QQBotWorkspace\versions\upstream-main\scripts\test_private_chat.py", line 881, in test_vision_order_prefers_visual_only_model
+    self.assertEqual(order[0][1], "qwen3.8-chat")
+AssertionError: 'deepseek-v4-flash' != 'qwen3.8-chat'
+- deepseek-v4-flash
++ qwen3.8-chat
+
+
+----------------------------------------------------------------------
+Ran 182 tests in 56.894s
+
+FAILED (failures=2)
