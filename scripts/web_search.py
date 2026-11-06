@@ -653,7 +653,9 @@ async def _raw_search(q: str, n: int, time_range: str, *,
 
     try:
         async with httpx.AsyncClient(trust_env=False) as client:
-            resp = await client.post(url, json=payload, timeout=to)
+            # 第一趟与质量重试都限制整次往返，慢速分块不能续期读超时。
+            resp = await asyncio.wait_for(
+                client.post(url, json=payload, timeout=to), timeout=to)
     except Exception as exc:   # 连接拒绝/超时/DNS/TLS…（CancelledError 是 BaseException，不受影响）
         reason = type(exc).__name__ + ": " + (str(exc)[:120] or "无详情")
         _log(label + "跳过（" + reason + "）")

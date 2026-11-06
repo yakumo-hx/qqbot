@@ -875,10 +875,13 @@ class PureTest(unittest.TestCase):
 
     def test_vision_order_prefers_visual_only_model(self):
         from scripts import llm_pool
+        from unittest.mock import patch
         llm_pool.clear_cooldowns()
-        order = llm_pool._build_attempt_order("qwen3.8-chat", vision=True)
+        cfg = {"tiers": [["chat-model"]], "vision_models": ["visual-only"]}
+        with patch.object(llm_pool, "_load_config", return_value=cfg):
+            order = llm_pool._build_attempt_order("visual-only", vision=True)
         self.assertTrue(order)
-        self.assertEqual(order[0][1], "qwen3.8-chat")
+        self.assertEqual(order[0][1], "visual-only")
 
     def test_corrections(self):
         base = make_test_dir("corr")

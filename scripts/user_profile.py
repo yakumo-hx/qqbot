@@ -98,6 +98,36 @@ _profiles: Dict[str, Dict[str, str]] = {}             # {gid: {uid: "自然语�
 _napcat_connected: bool = True
 # 受限时段内失败的待重试队列（结构同 _speak_buffer）
 _pending_retry: Dict[str, Dict[str, List[str]]] = {}
+_update_lock = asyncio.Lock()  # 长、短周期共同认领批次；record_message 继续同步入队。
+
+
+class _ProfileMessage(str):
+    """每次发言有独立身份；相同文本的新发言不能被旧批次清理掉。"""
+
+
+def _remove_messages(queue, gid, uid, msgs):
+    """按消息身份移除批次的镜像，保留处理期间新入队的消息。"""
+    users = queue.get(gid, {})
+    identities = {id(msg) for msg in msgs}
+    current = users.get(uid, [])
+    removed = [msg for msg in current if id(msg) in identities]
+    remaining = [msg for msg in current if id(msg) not in identities]
+    if remaining:
+        users[uid] = remaining
+    else:
+        users.pop(uid, None)
+    if not users:
+        queue.pop(gid, None)
+    return removed
+
+
+def _restore_messages(queue, gid, uid, msgs):
+    if not msgs:
+        return
+    current = queue.setdefault(gid, {}).setdefault(uid, [])
+    identities = {id(msg) for msg in current}
+    # 旧批次放在新发言之前；同一批在两个触发周期间只保留一份。
+    current[:0] = [msg for msg in msgs if id(msg) not in identities]
 
 # ========== 持久化路径 ==========
 _PROFILE_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
@@ -174,7 +204,7 @@ def record_message(gid: str, uid: str, text: str):
     if not text or not text.strip():
         return
     # 单条截断 200 字
-    trimmed = text.strip()[:200]
+    trimmed = _ProfileMessage(text.strip()[:200])
     _speak_buffer.setdefault(gid, {}).setdefault(uid, []).append(trimmed)
 
 
@@ -186,6 +216,12 @@ def get_profile(gid: str, uid: str) -> Optional[str]:
 
 
 async def update_profiles():
+    """按两小时周期更新画像，与短周期重试串行认领消息。"""
+    async with _update_lock:
+        return await _update_profiles_locked()
+
+
+async def _update_profiles_locked():
     """遍历缓冲中的活跃用户，调用模型池更新画像，保存到文件，清空缓冲。
 
     在受限时段（09:00-12:00 / 14:00-18:00）只做一次模型尝试，
@@ -194,8 +230,7 @@ async def update_profiles():
     if not PROFILE_ENABLED:
         return
 
-    buffer_snapshot = _speak_buffer.copy()
-    _speak_buffer.clear()
+    buffer_snapshot = {gid: dict(users) for gid, users in _speak_buffer.items()}
 
     if not buffer_snapshot:
         print("[画像] 无新发言，跳过更新")
@@ -214,10 +249,12 @@ async def update_profiles():
     for gid, users in buffer_snapshot.items():
         for uid, msgs in users.items():
             if len(msgs) < PROFILE_MIN_MESSAGES:
-                # 发言太少，放回缓冲等待积累
-                _speak_buffer.setdefault(gid, {}).setdefault(uid, []).extend(msgs)
+                # 发言太少，原位等待积累。
                 continue
 
+            # 本轮认领时同时移除短周期镜像；后续发言进入新的缓冲列表。
+            _remove_messages(_speak_buffer, gid, uid, msgs)
+            retry_copy = _remove_messages(_pending_retry, gid, uid, msgs)
             existing = _profiles.get(gid, {}).get(uid)
             try:
                 result = await _call_profile_api(msgs, existing, school_only)
@@ -229,23 +266,27 @@ async def update_profiles():
                     # 受限时段失败
                     if not _napcat_connected:
                         # NapCat 掉线 → 入待重试队列（不塞回 speak_buffer，等重连后重试）
-                        _pending_retry.setdefault(gid, {})[uid] = msgs
+                        _restore_messages(_pending_retry, gid, uid, msgs)
                         print(f"[画像] 受限时段 + NapCat 掉线，加入待重试队列: 群{gid} 用户{uid}")
                     else:
                         # 其他问题 → 入待重试队列 + 也放回 speak_buffer（5min短周期+下次2h周期双重兜底）
-                        _pending_retry.setdefault(gid, {})[uid] = msgs
-                        _speak_buffer.setdefault(gid, {}).setdefault(uid, []).extend(msgs)
+                        _restore_messages(_pending_retry, gid, uid, msgs)
+                        _restore_messages(_speak_buffer, gid, uid, msgs)
                         print(f"[画像] 受限时段 API 失败，加入待重试队列+缓冲: 群{gid} 用户{uid}")
                 else:
                     # 非受限时段：主备都失败，放回缓冲下次重试
-                    _speak_buffer.setdefault(gid, {}).setdefault(uid, []).extend(msgs)
+                    _restore_messages(_speak_buffer, gid, uid, msgs)
+            except asyncio.CancelledError:
+                _restore_messages(_speak_buffer, gid, uid, msgs)
+                _restore_messages(_pending_retry, gid, uid, retry_copy)
+                raise
             except Exception as e:
                 print(f"[画像] 更新失败 群{gid} 用户{uid}: {e}")
                 traceback.print_exc()
                 if school_only and not _napcat_connected:
-                    _pending_retry.setdefault(gid, {})[uid] = msgs
+                    _restore_messages(_pending_retry, gid, uid, msgs)
                 else:
-                    _speak_buffer.setdefault(gid, {}).setdefault(uid, []).extend(msgs)
+                    _restore_messages(_speak_buffer, gid, uid, msgs)
 
     if updated_count > 0:
         save_profiles()
@@ -256,22 +297,24 @@ async def update_profiles():
 
 
 async def retry_pending_updates() -> int:
+    """重连或五分钟短周期触发；与长周期共用批次认领锁。"""
+    async with _update_lock:
+        return await _retry_pending_updates_locked()
+
+
+async def _retry_pending_updates_locked() -> int:
     """重试待更新队列。
 
     NapCat 重连后立即触发，或定时更新后 5 分钟短周期触发。
     返回成功更新的用户数。
     """
-    global _pending_retry
-
     if not _pending_retry:
         return 0
 
     school_only = _is_school_only_hours()
-    snapshot = _pending_retry.copy()
-    _pending_retry = {}
+    snapshot = {gid: dict(users) for gid, users in _pending_retry.items()}
 
     updated_count = 0
-    still_pending: Dict[str, Dict[str, List[str]]] = {}
 
     total = sum(len(u) for u in snapshot.values())
     logger.info("开始重试待更新队列，共 %d 个用户（当前%s时段）", total,
@@ -279,6 +322,8 @@ async def retry_pending_updates() -> int:
 
     for gid, users in snapshot.items():
         for uid, msgs in users.items():
+            _remove_messages(_pending_retry, gid, uid, msgs)
+            buffer_copy = _remove_messages(_speak_buffer, gid, uid, msgs)
             existing = _profiles.get(gid, {}).get(uid)
             try:
                 result = await _call_profile_api(msgs, existing, school_only)
@@ -288,21 +333,23 @@ async def retry_pending_updates() -> int:
                     logger.info("重试成功: 群%s 用户%s", gid, uid)
                 elif school_only and not _napcat_connected:
                     # NapCat 仍然掉线，留在队列继续等待
-                    still_pending.setdefault(gid, {})[uid] = msgs
+                    _restore_messages(_pending_retry, gid, uid, msgs)
                     logger.info("重试仍失败（NapCat 仍掉线），继续等待: 群%s 用户%s", gid, uid)
                 else:
                     # 其他原因 → 放回 speak_buffer 等下次 2h 周期
-                    _speak_buffer.setdefault(gid, {}).setdefault(uid, []).extend(msgs)
+                    _restore_messages(_speak_buffer, gid, uid, msgs)
                     logger.info("重试失败，放回缓冲等下次周期: 群%s 用户%s", gid, uid)
+            except asyncio.CancelledError:
+                _restore_messages(_pending_retry, gid, uid, msgs)
+                _restore_messages(_speak_buffer, gid, uid, buffer_copy)
+                raise
             except Exception as e:
                 logger.error("重试异常 群%s 用户%s: %s", gid, uid, e)
                 traceback.print_exc()
                 if school_only and not _napcat_connected:
-                    still_pending.setdefault(gid, {})[uid] = msgs
+                    _restore_messages(_pending_retry, gid, uid, msgs)
                 else:
-                    _speak_buffer.setdefault(gid, {}).setdefault(uid, []).extend(msgs)
-
-    _pending_retry = still_pending
+                    _restore_messages(_speak_buffer, gid, uid, msgs)
 
     if updated_count > 0:
         save_profiles()

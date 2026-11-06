@@ -72,15 +72,13 @@ DEFAULT_MAX_TOKENS = 500
 # 思考型模型（T3/T4/T5）在小 max_tokens 下会 HTTP 200 + content 空（PROBE R1）。
 # 512 是覆盖所有思考型最低需求（glm 128 / 其余 64）并留 4–8× 余量的安全网。
 DEFAULT_MIN_MAX_TOKENS = 512
-DEFAULT_ATTEMPT_TIMEOUT = 20.0
-DEFAULT_TOTAL_BUDGET = 45.0
+DEFAULT_ATTEMPT_TIMEOUT = 45.0
+DEFAULT_TOTAL_BUDGET = 55.0
 DEFAULT_COOLDOWN = 60.0
 DEFAULT_HARD_COOLDOWN = 600.0
 # 视觉白名单兜底（config/model_pool.json 的 vision_models 缺失/为空时用）。
-# 依据：实测 deepseek-flash / glm-5.3-flash / qwen3.8-chat 能正确识图；
-# qwen3.8-flash-next 对图片只回 reasoning_content、正文为空（会被池判为空内容）；
-# unlimited-ocr 是 OCR 模型，不是视觉模型。
-DEFAULT_VISION_MODELS = ("deepseek-flash", "glm-5.3-flash", "qwen3.8-chat")
+# 与当前网关配置的视觉模型保持一致，配置缺失时使用同一候选集。
+DEFAULT_VISION_MODELS = ("deepseek-v4-flash", "qwen3.8-flash", "glm-5.3-flash")
 
 # 判定"模型不存在/不支持"的关键词（用于区分长冷却与普通冷却）
 _MODEL_MISSING_MARKERS = (
@@ -202,11 +200,10 @@ _FALLBACK_CONFIG = {
     "base_url_env": "LLM_POOL_BASE_URL",
     "api_key_env": "LLM_POOL_API_KEY",
     "tiers": [
-        ["deepseek-flash", "deepseek-flash-2"],
-        ["deepseek-v4-flash-ascend", "deepseek-v4-flash-ascend1"],
-        ["qwen3.8-flash-next-2", "qwen3.8-flash-next"],
+        ["deepseek-v4-flash"],
+        ["qwen3.8-flash"],
+        ["minimax-m2.7"],
         ["glm-5.3-flash"],
-        ["qwen3.8-reasoner"],
     ],
     "attempt_timeout_seconds": DEFAULT_ATTEMPT_TIMEOUT,
     "total_budget_seconds": DEFAULT_TOTAL_BUDGET,
@@ -216,9 +213,9 @@ _FALLBACK_CONFIG = {
     "min_max_tokens": DEFAULT_MIN_MAX_TOKENS,
     # 结构可扩展：后续可按模型加别的键（如 extra_params / timeout_seconds）
     "model_overrides": {
-        "glm-5.3-flash": {"min_max_tokens": 128},
+        "qwen3.8-flash": {"min_max_tokens": 1024},
     },
-    "no_response_format": ["qwen3.8-flash-next"],
+    "no_response_format": [],
     # 视觉白名单（vision=True 时只在这些模型里挑；留空则回退全链）
     "vision_models": list(DEFAULT_VISION_MODELS),
 }

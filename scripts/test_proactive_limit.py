@@ -63,9 +63,12 @@ class ProactiveLimitTest(unittest.TestCase):
         de.time = self._orig_time
 
     def _ask(self, gid, msg="这是一句足够长的测试消息", at=False):
+        async def delivered(reply):
+            self.engine.finish_reply(gid, reply, [("text", types.SimpleNamespace(status="ok"))],
+                                     is_at_bot=at)
         return asyncio.run(self.engine.should_reply(
             message=msg, user_id="u1", group_id=gid,
-            is_at_bot=at, sender_nickname="测试", sticker_on=False))
+            is_at_bot=at, sender_nickname="测试", sticker_on=False, on_reply=delivered))
 
     # ---------- 限流 ----------
     def test_五次要放行_第六次被拦(self):

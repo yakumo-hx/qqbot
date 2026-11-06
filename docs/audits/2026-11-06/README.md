@@ -1,8 +1,35 @@
 # QQbot 决策链复查：2026-11-06
 
-审查基线：`d32b2ab60f2dc7eb66fa3ba1b47f24e42f804f25`，对照旧版 `6ad6b325623ffdc7f2863e293007e8b223bf6407`。本次提交收录问题描述、完整测试输出、定向复现脚本和结果，作为后续修复与回归的共同基线。
+审查基线：`d32b2ab60f2dc7eb66fa3ba1b47f24e42f804f25`，对照旧版 `6ad6b325623ffdc7f2863e293007e8b223bf6407`。原始测试输出、定向复现脚本和结果保留为比较基线；本 PR 的修复结果如下。
 
-## 验证结果
+## 修复结果
+
+9 个 unittest 模块共 **209 项全部通过**，耗时 59.857 秒；包含新增的 27 项回归。完整输出见 [fix-unittest-output.txt](fix-unittest-output.txt)。`reverse_bot`、`private_bot` 导入检查及 `git diff --check` 通过。
+
+| 问题 | 修复后的行为 |
+| --- | --- |
+| 同群积压与请求耗时 | 一个连接内每群最多 20 条在处理消息，满额时记录群号和消息 ID；同群锁等待上限 60 秒。消息接收时启动 180 秒总预算，覆盖识图、排队、搜索、分类、主备生成和发送，耗尽时取消并进入现有回收流程。断线取消该连接关联的消息任务，回执路由和其他群继续独立处理。 |
+| 搜索与上下文预算 | 首次搜索的整个 HTTP 往返受硬超时约束；模型脚本的 60 秒预算从上下文准备开始，继续覆盖启动和通信。 |
+| 明确发送失败污染状态 | 同群锁覆盖发送收尾；`finish_reply` 根据回执更新冷却、主动配额、去重与防复读上下文。`failed` 释放本轮状态，`unknown` 按可能已送达保留状态且不自动重发。图文分别判断，文字失败、图片成功时只记录图片回复。 |
+| 密度兜底失效 | 低置信度且密度超过兜底门槛时进入生成；正常分类仍走动态阈值，分类器异常仍保持 fail-closed。 |
+| @ 回复挤占主动配额 | 回复来源在收尾时决定是否增加主动计数；@/别名保持独立限流，纯图回复同样遵守来源区分。 |
+| 画像重复与任务丢失 | 长、短周期串行认领批次，按消息身份清理另一队列的镜像；保留相同文本的新发言和处理期间新增任务。失败归还对应队列，取消时归还当前批次，未处理用户留在原队列。 |
+| 模型迁移遗漏 | 默认模型、内置池配置与当前配置一致；视觉测试分别覆盖视觉专用候选和当前私聊首选模型。 |
+| 发送耗时与台账 | 写入和等回执共享 10 秒总预算；台账从入口处理开始计时，包含识图和群锁等待。 |
+
+主备模型脚本、群白名单、私聊独立运行、搜索、表情和双周期画像更新沿用现有架构。发送流程通过 `on_reply` 回调在已有群锁内收尾，画像批次调整集中于 `user_profile.py`。
+
+回归命令：
+
+```powershell
+$env:PYTHONIOENCODING='utf-8'
+$env:PYTHONDONTWRITEBYTECODE='1'
+$env:DECISION_TRACE_DISABLED='1'
+python -B -m unittest scripts.test_decision_regressions scripts.test_decision_release scripts.test_group_event_loop_offload scripts.test_llm_pool_budget scripts.test_model_script_cleanup scripts.test_private_chat scripts.test_private_dialogue scripts.test_private_runtime scripts.test_proactive_limit -v
+python -B -c "import reverse_bot; import private_bot; print('reverse_bot / private_bot imports OK')"
+```
+
+## 基线验证结果
 
 Windows、Python 3.10.11，使用项目虚拟环境，UTF-8 输出。8 个 unittest 模块共运行 182 项，耗时 56.894 秒：180 项通过，2 项断言失败。完整输出见 [unittest-output.txt](unittest-output.txt)，定向复现见 [probe-results.json](probe-results.json)。耗时数值是此次运行的观测值。
 
@@ -24,7 +51,7 @@ python -B docs/audits/2026-11-06/probes.py
 3. 模型子进程超时和取消时执行 terminate、等待、必要时 kill，并清理管道。相关 5 项测试通过。
 4. 决策回复已接入 echo 回执，台账区分 ok、failed、unknown。模拟平台明确失败时，台账正确记录 failed。
 
-## 待修复问题
+## 基线问题与触发条件
 
 ### P1：同群等待缺少完整请求预算与队列约束
 
@@ -62,21 +89,19 @@ python -B docs/audits/2026-11-06/probes.py
 
 双队列兜底符合注释。复现显示，短周期重试成功后，同一批 5 条消息仍在长周期缓冲；另一个复现中，等待 API 期间加入的新用户任务在重试结束后消失。建议以批次标识清理已完成消息，并合并失败快照与重试期间新增任务。
 
-## 模型迁移的两项失败断言
+## 基线模型迁移的两项失败断言
 
 1. `ProductionSafetyTest.test_48_入口接线使用回执层且默认关闭生产台账`：默认常量 `deepseek-flash` 与配置 `deepseek-v4-flash` 不一致。`llm_pool._FALLBACK_CONFIG` 也仍保留旧模型列表，应与新配置一起更新。
 2. `PureTest.test_vision_order_prefers_visual_only_model`：测试期待旧的 `qwen3.8-chat`；当前配置视觉模型为 `qwen3.8-flash`。定向复现确认新名称能优先进入视觉尝试序列。建议测试使用明确的候选配置，分别覆盖视觉专用模型和当前生产配置。
 
-## 耗时与观测补充
+## 基线耗时与观测补充
 
 - 回执层对写入、等待回执分别使用 timeout。100ms 参数加 80ms 写入延迟，实测约 203ms 返回 unknown。默认 10 秒参数对应两个独立阶段，文档宜明确这一口径。
 - 决策台账从获取群锁之后开始计时，因此排队和前置识图耗时需要结合入口总耗时查看。
 - 主备模型脚本按注释运行于独立进程，各自持有模型池冷却状态；整体耗时评估应计入两轮尝试。
 
-## 运行材料与后续复查
+## 部署配置
 
-此克隆的运行配置需要补齐本地 `.env` 的 `LLM_POOL_API_KEY`，模板应同步增加该项。文档引用的 `tools/bot_launcher.ps1`、实际 OneBot 连接配置和分类模型缓存由部署环境提供；`set_env.py` 当前指向 `E:\QQbot\models_cache`。表情资源、pixivtools 分别服务对应功能。
+`.env.example` 已列出当前模型出口 `LLM_POOL_BASE_URL` 和 `LLM_POOL_API_KEY`，旧密钥标注为回滚配置。`set_env.py` 默认使用项目下的 `models_cache`，部署者显式设置的 `HF_HOME`、`TRANSFORMERS_CACHE` 和 `HUGGINGFACE_HUB_CACHE` 优先。
 
-后续结合相同时间段的机器人、模型池、决策台账和网关日志，可将上述复现映射到实际请求。群白名单、私聊默认关闭、分类器异常静默、@ 独立防滥用和 unknown 不重发均按代码注释作为预期策略。
-
-后续修复提交继续推送本 PR 分支，并追加对应回归结果；本目录保留本次基线证据。
+本目录同时保留基线证据与修复后的测试输出。

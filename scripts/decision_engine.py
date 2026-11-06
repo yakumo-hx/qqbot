@@ -77,6 +77,9 @@ _classifier_error_ctx: contextvars.ContextVar = contextvars.ContextVar(
     "decision_classifier_error", default=None,
 )
 
+# 同群串行等待上限；完整消息预算由入口覆盖识图、排队、决策与发送。
+_GROUP_QUEUE_WAIT_SECONDS = 60.0
+
 # ---------- 联网搜索（借 DSH dsh-free-search 插件的 loopback bridge） ----------
 # 同样是双路兼容导入。**搜索是增强项**：模块缺失/环境缺 httpx 时降级为
 # "无搜索"（fail-closed），绝不因为搜索接不上而让整个机器人起不来。
@@ -593,7 +596,7 @@ class DecisionEngine:
     AVAILABLE_MODELS = _pool_available_models()
 
     # active_model.json 缺失/非法时的兜底模型（本地网关 T1 首档）
-    DEFAULT_MODEL = "deepseek-flash"
+    DEFAULT_MODEL = "deepseek-v4-flash"
 
     @staticmethod
     def _get_model_config_path() -> str:
@@ -1205,44 +1208,47 @@ class DecisionEngine:
         else:
             logger.info("[定向回复] 本轮无 target（沿用旧 prompt）")
 
-        context_text = await self._format_context(gid)
-        system_prompt = self._load_character(gid)
-
-        # 动态读取当前模型配置
-        active_model = self.get_active_model()
-
-        # 若未显式传入 api_key，则使用主模型配置的 key
-        effective_key = api_key if api_key else active_model["api_key"]
-
-        # 防复读：本群最近自己说过的回复（最多 3 条，非空）
-        avoid_recent = [r for r in self._recent_bot_replies.get(gid, ()) if r]
-
-        input_data = json.dumps({
-            "context": context_text,
-            "persona": system_prompt,
-            "max_tokens": max_tokens,
-            "model": active_model["model"],
-            "preferred_model": active_model["model"],
-            "api_base_url": active_model["api_base_url"],
-            "api_key": effective_key,
-            "target": target,
-            "avoid_recent": avoid_recent,
-            **({"search": search} if search else {}),
-        }, ensure_ascii=False)
-
-        python_exe = sys.executable or "python"
         proc = None
-        try:
+
+        async def _communicate():
+            nonlocal proc
+            context_text = await self._format_context(gid)
+            system_prompt = self._load_character(gid)
+
+            # 动态读取当前模型配置
+            active_model = self.get_active_model()
+
+            # 若未显式传入 api_key，则使用主模型配置的 key
+            effective_key = api_key if api_key else active_model["api_key"]
+
+            # 防复读：本群最近自己说过的回复（最多 3 条，非空）
+            avoid_recent = [r for r in self._recent_bot_replies.get(gid, ()) if r]
+
+            input_data = json.dumps({
+                "context": context_text,
+                "persona": system_prompt,
+                "max_tokens": max_tokens,
+                "model": active_model["model"],
+                "preferred_model": active_model["model"],
+                "api_base_url": active_model["api_base_url"],
+                "api_key": effective_key,
+                "target": target,
+                "avoid_recent": avoid_recent,
+                **({"search": search} if search else {}),
+            }, ensure_ascii=False)
+
+            python_exe = sys.executable or "python"
             proc = await asyncio.create_subprocess_exec(
                 python_exe, script_path,
                 stdin=asyncio.subprocess.PIPE,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
-            stdout, stderr = await asyncio.wait_for(
-                proc.communicate(input=input_data.encode("utf-8")),
-                timeout=_MODEL_SCRIPT_TIMEOUT,
-            )
+            return await proc.communicate(input=input_data.encode("utf-8"))
+
+        try:
+            # 同一预算覆盖上下文准备、启动和通信；超时/取消沿用下方回收路径。
+            stdout, stderr = await asyncio.wait_for(_communicate(), _MODEL_SCRIPT_TIMEOUT)
             if proc.returncode != 0:
                 stderr_text = stderr.decode("utf-8", errors="replace").strip()
                 logger.error("模型脚本 %s 异常退出 (code=%d): %s",
@@ -1404,7 +1410,6 @@ class DecisionEngine:
             is_valid, reason = self._validate_content(reply)
             if is_valid:
                 logger.info("[熔断] 主模型回复有效")
-                self._record_bot_reply_metric(gid, reply)
                 return reply
             else:
                 logger.warning("[熔断] 主模型内容异常 (%s)，切换至备用模型 | 回复内容: %s", reason, reply[:100])
@@ -1422,7 +1427,6 @@ class DecisionEngine:
             is_valid, reason = self._validate_content(reply)
             if is_valid:
                 logger.info("[熔断] 备用模型回复有效")
-                self._record_bot_reply_metric(gid, reply)
                 return reply
             else:
                 logger.warning("[熔断] 备用模型内容异常 (%s)，放弃回复", reason)
@@ -1832,6 +1836,8 @@ class DecisionEngine:
         search_on: bool = False,
         sticker_on: bool = False,
         message_id: Optional[str] = None,
+        on_reply=None,
+        received_at: Optional[float] = None,
     ) -> Tuple[bool, Optional["ReplyResult"]]:
         """
         判断是否应回复并生成回复内容。
@@ -1845,16 +1851,45 @@ class DecisionEngine:
           - 决策台账 trace_id（缺失时用随机 UUID，不含消息正文）；
           - 进程内重复投递抑制（同一 ``(gid, message_id)`` 只决策一次）。
           不传时行为与接线前一致（不抑制、trace 用 UUID）。
+
+        on_reply：入口提供的异步发送回调，在同一群锁内执行并调用 finish_reply。
+        不传时只生成结果；冷却、配额与最近回复在发送收尾时更新。
+        received_at：入口接收时间，台账耗时包含前置识图和排队。
         """
         gid = str(group_id)
 
-        # 按群加锁：同群决策串行，不同群并行
+        started_at = time.time() if received_at is None else received_at
+        # 同群决策与发送串行，不同群并行；回执收尾后才让下一条读取回复状态。
         g_lock = await self._get_group_lock(gid)
-        async with g_lock:
-            return await self._should_reply_locked(
-                message, user_id, group_id, is_at_bot, sender_nickname, search_on,
-                sticker_on, message_id,
-            )
+        try:
+            await asyncio.wait_for(g_lock.acquire(), _GROUP_QUEUE_WAIT_SECONDS)
+        except asyncio.TimeoutError:
+            trace = self._new_trace(gid, str(user_id), message_id, is_at_bot, message, started_at)
+            trace.stage("queue_timeout", False, "同群等待超时")
+            trace.finish(final_outcome=OUTCOME_SILENT, send_status=SEND_NOT_ATTEMPTED)
+            return False, None
+        try:
+            self._sweep_traces(time.time())
+            if self._is_duplicate_message(gid, message_id):
+                self._debug("去重消息", f"重复 message_id({message_id})，跳过")
+                return False, None
+            trace = self._new_trace(gid, str(user_id), message_id, is_at_bot, message, started_at)
+            try:
+                result = await self._should_reply_locked(
+                    message, user_id, group_id, is_at_bot, sender_nickname, search_on,
+                    sticker_on, message_id, trace,
+                )
+                if result[0] and on_reply is not None:
+                    await on_reply(result[1])
+                return result
+            except asyncio.CancelledError:
+                if not trace.finished:
+                    trace.stage("cancelled", False, "请求取消")
+                    trace.finish(final_outcome=_trace_mod.OUTCOME_INCOMPLETE,
+                                 send_status=SEND_NOT_ATTEMPTED)
+                raise
+        finally:
+            g_lock.release()
 
     async def _should_reply_locked(
         self,
@@ -1866,6 +1901,7 @@ class DecisionEngine:
         search_on: bool = False,
         sticker_on: bool = False,
         message_id: Optional[str] = None,
+        trace=None,
     ) -> Tuple[bool, Optional["ReplyResult"]]:
         """should_reply 的内部实现，调用方必须持有 _group_locks[gid]
 
@@ -1879,21 +1915,9 @@ class DecisionEngine:
         gid = str(group_id)
         uid = str(user_id)
 
-        # 先给漏收尾的旧台账兜底（只写台账，绝不补发任何消息）
-        self._sweep_traces(t_start)
-
         # 确保上下文存在
         if gid not in self._contexts:
             self._contexts[gid] = ContextRingBuffer(max_size=50)
-
-        # ===== 重复 message_id 抑制（同一消息只决策/发送一次；进程内，重启清空）=====
-        if self._is_duplicate_message(gid, message_id):
-            logger.info("[决策] 重复 message_id 已抑制 mid=%s 群=%s", message_id, gid)
-            self._debug("去重消息", f"重复 message_id({message_id})，跳过")
-            return (False, None)
-
-        # ===== 台账（trace_id 优先 message_id，缺失时随机 UUID）=====
-        trace = self._new_trace(gid, uid, message_id, is_at_bot, message, t_start)
 
         def _silent(outcome: str = OUTCOME_SILENT):
             """本次决策不发送任何内容：当场收尾台账（send_status=not_attempted）。"""
@@ -1940,7 +1964,6 @@ class DecisionEngine:
                 trace.sticker_only = True
                 trace.reached_generation = False
                 trace.stage("sticker", True, "strong（只发图，跳过生成）")
-                self._record_reply(gid, "")          # 纯图同样要吃冷却，否则会连发
                 return _reply("", pick.path)
             if pick.level != _LEVEL_NONE:
                 self._debug("表情", f"{pick.level} 文字+图（{os.path.basename(pick.path)}）")
@@ -1981,7 +2004,6 @@ class DecisionEngine:
             trace.generation_ok = True
             trace.content_kind = ("text+sticker" if pick.level != _LEVEL_NONE else "text")
             trace.stage("generation", True, f"chars={len(reply)}")
-            self._record_reply(gid, reply)
             return _reply(reply, pick.path if pick.level != _LEVEL_NONE else "")
 
         # ===== 前置过滤器（@bot 已处理，此处仅过滤非 @bot 消息）=====
@@ -2063,13 +2085,14 @@ class DecisionEngine:
                 return _silent()
 
         # ===== 阈值判断 =====
-        if label != "需要回复" or score < threshold:
+        elif label != "需要回复" or score < threshold:
             reason = (f"label={label} score={score:.4f}<{threshold:.4f}"
                       if score < threshold else f"label={label}")
             trace.stage("threshold", False, reason)
             self._debug("最终", f"不回复 (label={label}, score={score:.4f} < {threshold:.4f})")
             return _silent()
-        trace.stage("threshold", True, f"label={label} score={score:.4f}>={threshold:.4f}")
+        trace.stage("threshold", True, "密度兜底" if score < fallback_threshold
+                    else f"label={label} score={score:.4f}>={threshold:.4f}")
         self._debug("最终", f"回复 (label={label}, score={score:.4f})")
         trace.policy_intent = True
 
@@ -2083,7 +2106,6 @@ class DecisionEngine:
             trace.sticker_only = True
             trace.reached_generation = False
             trace.stage("sticker", True, "strong（只发图，跳过生成）")
-            self._record_reply(gid, "")
             return _reply("", pick.path)
         if pick.level != _LEVEL_NONE:
             self._debug("表情", f"{pick.level} 文字+图（{os.path.basename(pick.path)}）")
@@ -2145,8 +2167,23 @@ class DecisionEngine:
 
         trace.generation_ok = True
         trace.content_kind = ("text+sticker" if pick.level != _LEVEL_NONE else "text")
-        self._record_reply(gid, reply)
         return _reply(reply, pick.path if pick.level != _LEVEL_NONE else "")
+
+    def finish_reply(self, gid: str, reply: ReplyResult, attempts, *, is_at_bot: bool):
+        """按回执提交回复状态，再收尾台账；调用方在 on_reply 中执行。
+
+        failed 不占状态；unknown 可能已到达平台，保留冷却/配额/去重且不补发。
+        图文分别判断：文字明确失败但图片成功时，只记录图片回复。
+        """
+        trace = reply.trace
+        if trace.finished:
+            return
+        delivered = {kind for kind, outcome in attempts
+                     if outcome.status in ("ok", "unknown")}
+        if delivered:
+            text = reply.text if "text" in delivered else ""
+            self._record_reply(str(gid), text, proactive=not is_at_bot)
+        trace.finish_after_send(attempts)
 
     def _proactive_count_within(self, gid: str, window: float) -> int:
         """返回该群过去 window 秒内的主动发言次数（滚动窗口，顺带清理过期记录）。"""
@@ -2158,7 +2195,7 @@ class DecisionEngine:
             buf.popleft()
         return len(buf)
 
-    def _record_reply(self, gid: str, reply: str):
+    def _record_reply(self, gid: str, reply: str, *, proactive: bool = True):
         """记录回复（更新冷却时间、最近回复缓存、主动发言限流计数）。
 
         纯图回复传空串：冷却照常更新（否则机器人会连发图），
@@ -2166,10 +2203,12 @@ class DecisionEngine:
         """
         now = time.time()
         self._last_reply_time[gid] = now
-        self._proactive_times[gid].append(now)   # 计入主动发言限流（纯图也占名额）
+        if proactive:
+            self._proactive_times[gid].append(now)   # 主动接话的纯图也占名额
         if reply:
             self._last_reply[gid] = reply
             self._recent_replies[gid].append(reply)
+            self._record_bot_reply_metric(gid, reply)
 
     async def _pick_sticker(self, gid: str, message: str, sticker_on: bool):
         """异步入口：完整表情选择（含引擎懒加载、共享模型编码、锁等待）在 worker 线程。

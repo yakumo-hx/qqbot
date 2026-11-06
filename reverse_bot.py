@@ -374,6 +374,31 @@ async def _describe_triggered_image(gid_str: str, message_images: list, raw_mess
 
 
 # ========== 消息处理 ==========
+async def _send_decision_reply(websocket, group_id, uid, is_at_bot, reply):
+    """在决策群锁内发送并按回执收尾，图文各保留自己的结果。"""
+    from scripts.decision_receipt import SendOutcome
+    attempts = []
+    try:
+        if reply.text:
+            # 一旦开始写入，取消/断线都属于 unknown；明确回执随后替换它。
+            attempts.append(("text", SendOutcome("unknown", kind="text")))
+            outcome = await decision_sender.send_text(
+                websocket, group_id, reply.text, at_user=uid if is_at_bot else None)
+            attempts[-1] = ("text", outcome)
+            if not outcome.ok:
+                bot_logger.info("[回执] 群 %s 文字 status=%s kind=%s",
+                                group_id, outcome.status, outcome.error_kind)
+        if reply.sticker:
+            attempts.append(("sticker", SendOutcome("unknown", kind="sticker")))
+            outcome = await decision_sender.send_image(
+                websocket, group_id, reply.sticker, sub_type=_sticker_send_sub_type())
+            attempts[-1] = ("sticker", outcome)
+            bot_logger.info("[回执] 群 %s 表情 status=%s kind=%s",
+                            group_id, outcome.status, outcome.error_kind)
+    finally:
+        decision_engine.finish_reply(str(group_id), reply, attempts, is_at_bot=is_at_bot)
+
+
 async def handle_message(websocket, data: dict):
     t_req = time.time()
     group_id = data["group_id"]
@@ -549,6 +574,9 @@ async def handle_message(websocket, data: dict):
                 sticker_on=_feature_on(gid_str, "sticker"),
                 # OneBot message_id：用于台账 trace_id 和进程内重复投递抑制
                 message_id=msg_id,
+                received_at=t_req,
+                on_reply=lambda reply: _send_decision_reply(
+                    websocket, group_id, uid_str, bot_mentioned, reply),
             )
 
             elapsed_ms = int((time.time() - t_decision) * 1000)
@@ -556,40 +584,6 @@ async def handle_message(websocket, data: dict):
                 bot_logger.info(f"[耗时] 决策引擎耗时 {elapsed_ms}ms (群{gid_str})")
 
             if should_reply and reply:
-                at_user = uid_str if bot_mentioned else None
-                # 决策回复走 echo 回执：send_status=ok 只认 OneBot 明确成功；
-                # unknown（超时/断连/写入异常）不自动重发。纯图回复不带 at ——
-                # 表情包本来就是「不说话」的替代。
-                sent_attempts = []
-                if reply.text:
-                    text_outcome = await decision_sender.send_text(
-                        websocket, group_id, reply.text, at_user=at_user)
-                    sent_attempts.append(("text", text_outcome))
-                    if not text_outcome.ok:
-                        bot_logger.info(
-                            f"[回执] 群 {gid_str} 文字发送未确认"
-                            f"（status={text_outcome.status}，kind={text_outcome.error_kind}）")
-                if reply.sticker:
-                    sub_type = _sticker_send_sub_type()
-                    image_outcome = await decision_sender.send_image(
-                        websocket, group_id, reply.sticker, sub_type=sub_type)
-                    sent_attempts.append(("sticker", image_outcome))
-                    if image_outcome.ok:
-                        bot_logger.info(
-                            f"[表情] 群 {gid_str} 发出表情"
-                            f"（sub_type={sub_type}，1=贴图/0=普通图片）")
-                    else:
-                        # 发图失败/未知绝不能影响已经发出去的文字
-                        bot_logger.info(
-                            f"[表情] 发送未确认（status={image_outcome.status}，"
-                            f"kind={image_outcome.error_kind}，不影响文字）")
-                # 台账收尾：必须在发送回执后写，否则无法区分 ok/failed/unknown
-                trace = getattr(reply, "trace", None)
-                if trace is not None:
-                    try:
-                        trace.finish_after_send(sent_attempts)
-                    except Exception as e:
-                        bot_logger.info(f"[决策台账] 收尾失败（已忽略）: {type(e).__name__}")
                 total_ms = int((time.time() - t_req) * 1000)
                 form = ("文字+图" if (reply.text and reply.sticker)
                         else ("只发图" if reply.sticker else "只发文字"))
@@ -687,9 +681,22 @@ async def mystery_number_task():
         _mystery_processing = False
 
 
-async def _safe_handle_message(websocket, data: dict):
+# 一个连接内每群最多 20 条在处理消息；从接收起的 180s 预算包含识图、
+# 同群等待、搜索、分类、主备生成和发送。群之间独立接收，回执持续路由。
+_MAX_GROUP_MESSAGE_TASKS = 20
+_MESSAGE_TIMEOUT_SECONDS = 180.0
+
+
+async def _safe_handle_message(websocket, data: dict, deadline=None):
+    loop = asyncio.get_running_loop()
+    if deadline is None:
+        deadline = loop.time() + _MESSAGE_TIMEOUT_SECONDS
     try:
-        await handle_message(websocket, data)
+        await asyncio.wait_for(handle_message(websocket, data),
+                               max(0.0, deadline - loop.time()))
+    except asyncio.TimeoutError:
+        bot_logger.info("[task] 消息总预算耗尽 群=%s mid=%s",
+                        data.get("group_id"), data.get("message_id"))
     except Exception as e:
         bot_logger.info(f"[task] handle_message 异常: {e}")
         traceback.print_exc()
@@ -723,6 +730,7 @@ async def handler(websocket, *args):
         bot_logger.info("[画像] NapCat 重连，触发待更新队列重试")
         asyncio.create_task(retry_pending_updates())
 
+    message_tasks = defaultdict(set)
     try:
         async for message in websocket:
             try:
@@ -736,7 +744,16 @@ async def handler(websocket, *args):
                 post_type = data.get("post_type")
                 if post_type == "message":
                     if data.get("message_type") == "group":
-                        asyncio.create_task(_safe_handle_message(websocket, data))
+                        gid = str(data.get("group_id"))
+                        tasks = message_tasks[gid]
+                        if len(tasks) >= _MAX_GROUP_MESSAGE_TASKS:
+                            bot_logger.info("[排队] 群 %s 积压已满，跳过 mid=%s",
+                                            gid, data.get("message_id"))
+                            continue
+                        deadline = asyncio.get_running_loop().time() + _MESSAGE_TIMEOUT_SECONDS
+                        task = asyncio.create_task(_safe_handle_message(websocket, data, deadline))
+                        tasks.add(task)
+                        task.add_done_callback(tasks.discard)
                 elif post_type == "notice":
                     if data.get("notice_type") == "group_increase":
                         asyncio.create_task(_safe_handle_group_increase(websocket, data))
@@ -766,6 +783,10 @@ async def handler(websocket, *args):
             current_websocket = None
             set_napcat_connected(False)
             _watchdog.on_disconnected()                  # [自愈] 开一轮停机计时（90s 后弹窗告警）
+        pending = [task for tasks in message_tasks.values() for task in tasks]
+        for task in pending:
+            task.cancel()
+        await asyncio.gather(*pending, return_exceptions=True)
 
 
 async def main():

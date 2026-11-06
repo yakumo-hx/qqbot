@@ -11,7 +11,7 @@
 - ``unknown`` 超时、断连、写入异常、回执无法判定——请求**可能已经到达平台**，
               **绝不自动重发**。
 
-写入与回执都受同一个 ``timeout`` 约束（默认 10 秒）：WS 背压导致 ``send``
+写入与回执共享一个总 ``timeout``（默认 10 秒）：WS 背压导致 ``send``
 长时间不返回时按 ``unknown/write_timeout`` 收敛，不会无限挂起调用方。
 
 约束：
@@ -136,6 +136,7 @@ class DecisionSendReceipt:
         echo = self.prefix + uuid.uuid4().hex
         key = (websocket, echo)
         loop = asyncio.get_running_loop()
+        deadline = loop.time() + self.timeout
         future = loop.create_future()
         self.pending[key] = future
         try:
@@ -156,7 +157,7 @@ class DecisionSendReceipt:
                     error=f"写入异常: {type(exc).__name__}",
                 )
             try:
-                response = await asyncio.wait_for(future, self.timeout)
+                response = await asyncio.wait_for(future, max(0.0, deadline - loop.time()))
             except asyncio.TimeoutError:
                 return SendOutcome(
                     "unknown", kind=kind, echo=echo, error_kind="timeout",
@@ -173,6 +174,9 @@ class DecisionSendReceipt:
             self.pending.pop(key, None)
             if not future.done():
                 future.cancel()
+            elif not future.cancelled():
+                # 写入阶段被取消时，断连可能已给回执 Future 设置异常。
+                future.exception()
 
         return self._interpret(response, action=action, kind=kind, echo=echo)
 

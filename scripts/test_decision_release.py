@@ -326,14 +326,15 @@ class EngineTestBase(unittest.TestCase):
         self.assertTrue(records, "台账为空")
         return records[-1]
 
-    def _finalize(self, reply, *, status="ok", kind="text", retcode=0):
+    def _finalize(self, engine, reply, *, status="ok", kind="text", retcode=0):
         """用**模拟回执**给 reply 收尾（不是真实发送；真实三态由 ReceiptTest 覆盖）。"""
         outcome = SendOutcome(
             status=status, kind=kind, retcode=retcode,
             message_id=("srv-1" if status == "ok" else None),
             error_kind=("" if status == "ok" else "onebot"),
         )
-        reply.trace.finish_after_send([(kind, outcome)])
+        engine.finish_reply(reply.trace.record["group_id"], reply, [(kind, outcome)],
+                            is_at_bot=reply.trace.record["is_at_bot"])
 
     @staticmethod
     def _stages(record):
@@ -431,7 +432,7 @@ class TraceLedgerTest(EngineTestBase):
         self.assertEqual(len(results), 20)
         for ok, reply in results:
             self.assertTrue(ok)
-            self._finalize(reply)
+            self._finalize(engine, reply)
         records = self._records()
         self.assertEqual(len(records), 20)          # 每行都是完整 JSON
         self.assertEqual(len({r["trace_id"] for r in records}), 20)
@@ -449,7 +450,7 @@ class TraceLedgerTest(EngineTestBase):
         self.assertTrue(ok)
         self.assertEqual(reply.text, "")
         self.assertEqual(reply.sticker, png_path)
-        self._finalize(reply, kind="sticker")
+        self._finalize(engine, reply, kind="sticker")
 
         record = self._last()
         self.assertEqual(record["content_kind"], "sticker")
@@ -473,7 +474,7 @@ class TraceLedgerTest(EngineTestBase):
         ok, reply = self._ask(engine, mid="idempotent-1")
         self.assertTrue(ok)
         self.assertEqual(self._records(), [])
-        self._finalize(reply)
+        self._finalize(engine, reply)
         self.assertEqual(len(self._records()), 1)
         self.assertFalse(reply.trace.finish(final_outcome="silent",
                                             send_status="failed"))
@@ -556,7 +557,7 @@ class TraceLedgerTest(EngineTestBase):
         engine._classify_needs_reply = _high
         ok, reply = self._ask(engine, mid="session-reply")
         self.assertTrue(ok)
-        self._finalize(reply)
+        self._finalize(engine, reply)
 
         records = self._records()
         self.assertEqual(len(records), 2)
@@ -593,7 +594,7 @@ class DecisionOutcomeTest(EngineTestBase):
         self.assertTrue(ok)
         self.assertTrue(reply.text)
         self.assertEqual(reply.trace.policy_intent, True)
-        self._finalize(reply)
+        self._finalize(engine, reply)
 
         records = self._records()
         self.assertEqual(records[0]["final_outcome"], OUTCOME_SILENT)
@@ -615,7 +616,7 @@ class DecisionOutcomeTest(EngineTestBase):
         self.assertIn("at_bot", self._stages(record))
         self.assertIn("at_reply_limit", self._stages(record))
         self.assertTrue(self._stage(record, "at_reply_limit")["passed"])
-        self._finalize(reply)
+        self._finalize(engine, reply)
         self.assertEqual(self._last()["final_outcome"], OUTCOME_REPLY_SENT)
 
     def test_12_六十秒窗口内第七次艾特被阻断(self):
@@ -628,7 +629,7 @@ class DecisionOutcomeTest(EngineTestBase):
             ok, reply = self._ask(engine, at=True, mid="at-window-%d" % index)
             self.assertTrue(ok, "第 %d 次 @ 应放行（%s）"
                             % (index + 1, engine.get_debug_info()))
-            self._finalize(reply)
+            self._finalize(engine, reply)
         self.assertEqual(generation.calls, 6)
 
         self.clock.advance(5)                      # 仍在 60s 窗口内
@@ -652,7 +653,7 @@ class DecisionOutcomeTest(EngineTestBase):
 
         ok, reply = self._ask(engine, at=True, mid="interval-1")
         self.assertTrue(ok)
-        self._finalize(reply)
+        self._finalize(engine, reply)
 
         self.clock.advance(4.9)
         ok, reply = self._ask(engine, at=True, mid="interval-2")
@@ -664,7 +665,7 @@ class DecisionOutcomeTest(EngineTestBase):
         self.clock.advance(0.1)                   # 恰好满 5 秒
         ok, reply = self._ask(engine, at=True, mid="interval-3")
         self.assertTrue(ok, "满 5 秒后应恢复")
-        self._finalize(reply)
+        self._finalize(engine, reply)
 
     def test_14_假时钟越过窗口后恢复(self):
         engine = self._make_engine(label="需要回复")
@@ -675,14 +676,14 @@ class DecisionOutcomeTest(EngineTestBase):
                 self.clock.advance(5)
             ok, reply = self._ask(engine, at=True, mid="recover-%d" % index)
             self.assertTrue(ok)
-            self._finalize(reply)
+            self._finalize(engine, reply)
         self.clock.advance(5)
         self.assertFalse(self._ask(engine, at=True, mid="recover-7")[0])
 
         self.clock.advance(31)                    # 1000/1005..1025 都已出窗口
         ok, reply = self._ask(engine, at=True, mid="recover-8")
         self.assertTrue(ok, "窗口滑过后应恢复")
-        self._finalize(reply)
+        self._finalize(engine, reply)
         self.assertEqual(generation.calls, 7)
 
     def test_15_两群两用户计数互不影响(self):
@@ -694,17 +695,17 @@ class DecisionOutcomeTest(EngineTestBase):
             ok, reply = self._ask(engine, at=True, gid="gA", uid="uA",
                                   mid="gA-uA-%d" % index)
             self.assertTrue(ok)
-            self._finalize(reply)
+            self._finalize(engine, reply)
         self.clock.advance(5)
         self.assertFalse(self._ask(engine, at=True, gid="gA", uid="uA",
                                    mid="gA-uA-7")[0])
 
         ok_b, reply_b = self._ask(engine, at=True, gid="gA", uid="uB", mid="gA-uB-1")
         self.assertTrue(ok_b, "同群不同用户应独立计数")
-        self._finalize(reply_b)
+        self._finalize(engine, reply_b)
         ok_c, reply_c = self._ask(engine, at=True, gid="gB", uid="uA", mid="gB-uA-1")
         self.assertTrue(ok_c, "同用户不同群应独立计数")
-        self._finalize(reply_c)
+        self._finalize(engine, reply_c)
 
         self.assertEqual(engine._at_reply_limiter.count("gA", "uA", self.clock.now), 6)
         self.assertEqual(engine._at_reply_limiter.count("gA", "uB", self.clock.now), 1)
@@ -715,7 +716,7 @@ class DecisionOutcomeTest(EngineTestBase):
         engine._generate_reply_async = UniqueGen("proactive回答")
         ok, reply = self._ask(engine, mid="proactive-1")
         self.assertTrue(ok)
-        self._finalize(reply)
+        self._finalize(engine, reply)
 
         ok, reply = self._ask(engine, mid="proactive-2")
         self.assertFalse(ok, "第二次主动应被 proactive 上限拦下")
@@ -724,7 +725,7 @@ class DecisionOutcomeTest(EngineTestBase):
         self.clock.advance(1)
         ok, reply = self._ask(engine, at=True, mid="proactive-at")
         self.assertTrue(ok, "@bot 必须绕过 proactive 上限")
-        self._finalize(reply)
+        self._finalize(engine, reply)
         record = self._last()
         self.assertNotIn("proactive_cap", self._stages(record))
         self.assertTrue(self._stage(record, "at_reply_limit")["passed"])
@@ -762,7 +763,7 @@ class DecisionOutcomeTest(EngineTestBase):
         for index in range(2):
             ok, reply = self._ask(engine, at=True, mid="override-%d" % index)
             self.assertTrue(ok)
-            self._finalize(reply)
+            self._finalize(engine, reply)
         ok, _ = self._ask(engine, at=True, mid="override-3")
         self.assertFalse(ok)
         self.assertEqual(self._stage(self._last(), "at_rate_limited")["reason"],
@@ -776,7 +777,7 @@ class DecisionOutcomeTest(EngineTestBase):
                 self.clock.advance(5)
             ok, reply = self._ask(engine_a, at=True, mid="reset-a-%d" % index)
             self.assertTrue(ok)
-            self._finalize(reply)
+            self._finalize(engine_a, reply)
         self.clock.advance(5)
         self.assertFalse(self._ask(engine_a, at=True, mid="reset-a-7")[0])
         self.assertEqual(engine_a._at_reply_limiter.count("100880001", "2001",
@@ -794,10 +795,10 @@ class DecisionOutcomeTest(EngineTestBase):
         # 新实例：冷却与 @ 限流都必须重置（同一假时钟时刻即可放行）
         ok, reply = self._ask(engine_b, at=False, mid="reset-b-proactive")
         self.assertTrue(ok, "新实例的冷却状态必须重置")
-        self._finalize(reply)
+        self._finalize(engine_b, reply)
         ok, reply = self._ask(engine_b, at=True, mid="reset-b-1")
         self.assertTrue(ok, "新实例的限流状态必须重置")
-        self._finalize(reply)
+        self._finalize(engine_b, reply)
 
 
 # ---------------------------------------------------------------------------
@@ -812,7 +813,7 @@ class DuplicateMessageTest(EngineTestBase):
 
         ok, reply = self._ask(engine, mid="dup-mid-1")
         self.assertTrue(ok)
-        self._finalize(reply)
+        self._finalize(engine, reply)
 
         ok, reply = self._ask(engine, mid="dup-mid-1")
         self.assertFalse(ok)
@@ -831,8 +832,8 @@ class DuplicateMessageTest(EngineTestBase):
         self.assertTrue(ok_a, "同一 message_id 在 A 群应正常决策")
         self.assertTrue(ok_b, "同一 message_id 在 B 群不得被 A 群去重误伤")
         self.assertEqual(generation.calls, 2)
-        self._finalize(reply_a)
-        self._finalize(reply_b)
+        self._finalize(engine, reply_a)
+        self._finalize(engine, reply_b)
         records = self._records()
         self.assertEqual(len(records), 2)
         self.assertEqual({r["trace_id"] for r in records}, {"shared-mid"})
@@ -884,7 +885,7 @@ class GenerationOutcomeTest(EngineTestBase):
                                    generation=GenStub("今天天气真不错啊"))
         ok, reply = self._ask(engine, mid="dedupe-exact-1")
         self.assertTrue(ok)
-        self._finalize(reply)
+        self._finalize(engine, reply)
         ok, reply = self._ask(engine, mid="dedupe-exact-2")
         self.assertFalse(ok)
         record = self._last()
@@ -898,7 +899,7 @@ class GenerationOutcomeTest(EngineTestBase):
             generation=GenStub("今天天气真不错啊", "今天天气真不错呢"))
         ok, reply = self._ask(engine, mid="dedupe-similar-1")
         self.assertTrue(ok)
-        self._finalize(reply)
+        self._finalize(engine, reply)
         ok, reply = self._ask(engine, mid="dedupe-similar-2")
         self.assertFalse(ok)
         record = self._last()
@@ -925,7 +926,7 @@ class GenerationOutcomeTest(EngineTestBase):
                                    generation=GenStub("重复文本测试ABC"))
         ok, reply = self._ask(engine, mid="mix-dup-1")
         self.assertTrue(ok)
-        self._finalize(reply)
+        self._finalize(engine, reply)
         self.assertFalse(self._ask(engine, mid="mix-dup-2")[0])
         exact_record = self._last()
 
@@ -934,7 +935,7 @@ class GenerationOutcomeTest(EngineTestBase):
             generation=GenStub("今天天气真不错啊", "今天天气真不错呢"))
         ok, reply = self._ask(engine, mid="mix-sim-1")
         self.assertTrue(ok)
-        self._finalize(reply)
+        self._finalize(engine, reply)
         self.assertFalse(self._ask(engine, mid="mix-sim-2")[0])
         similar_record = self._last()
 
@@ -1362,11 +1363,24 @@ class EntryIntegrationTest(EngineTestBase):
         self.assertEqual(limited["reason"], "window_cap")
         self.assertEqual(last["send_status"], SEND_NOT_ATTEMPTED)
 
+    def test_42b_明确失败后新消息可以发送相同回答(self):
+        self.features["decision_engine"] = True
+        async def same_reply(*args, **kwargs):
+            return "这是一条发送失败后仍应允许发送的回答"
+        self.engine._generate_reply_async = same_reply
+        ws = FakeWebSocket(sender=self.sender, echo={"status": "failed", "retcode": 100})
+        self._handle(self._event(mid=510001, uid=2001), ws)
+        self.assertEqual(self.engine._last_reply, {})
+        self.assertEqual(self.engine._last_reply_time, {})
+        self._handle(self._event(mid=510002, uid=2002), ws)
+        self.assertEqual(len(ws.sent), 2)
+        self.assertEqual([row["send_status"] for row in self._records()], ["failed", "failed"])
+
     def test_43_echo回执在入口被路由且不当群消息(self):
         self.sender.timeout = 0.5
         injected = []
 
-        async def fake_safe_handle(websocket, data):
+        async def fake_safe_handle(websocket, data, deadline=None):
             injected.append(data)
 
         async def scenario():
@@ -1398,7 +1412,7 @@ class EntryIntegrationTest(EngineTestBase):
             "status": "ok", "retcode": 0, "data": {"message_id": "srv"}})
 
         async def scenario():
-            with mock.patch("socket.socket",
+            with mock.patch("socket.socket.connect",
                             side_effect=AssertionError("不得创建真实 socket")), \
                  mock.patch("asyncio.create_subprocess_exec",
                             side_effect=AssertionError("不得启动模型子进程")), \
